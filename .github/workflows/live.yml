@@ -35,4 +35,4 @@ jobs:
         run: python -m collector live
       - name: Guardar dados no repositório
         if: steps.today.outputs.race == 'yes'
-        run: scripts/commit-data.sh "dados: direto"
+        run: scripts/commit-data.sh "Dados - direto"

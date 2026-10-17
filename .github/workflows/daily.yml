@@ -30,4 +30,4 @@ jobs:
       - name: Recolher dados
         run: python -m collector daily --minutes "${{ inputs.minutes || '30' }}"
       - name: Guardar dados no repositório
-        run: scripts/commit-data.sh "dados: atualização diária"
+        run: scripts/commit-data.sh "Dados - atualização diária"
