@@ -196,6 +196,9 @@ def update_race(fx, slug, year, entry=None, force=False, full_stages=True, live=
             main = P.parse_result_page(fx.get(href))
         else:
             raise
+    if stage_race and (not main.get("info") or "one day race" in (main.get("page_title") or "").lower()):
+        stage_race, href = False, base_href(slug, year, False)
+        main = P.parse_result_page(fx.get(href))
     race.update(P.compact({
         "slug": slug, "year": year, "name": main.get("name") or entry.get("name"), "edition": main.get("edition"),
         "class": main.get("class") or entry.get("class"), "country": main.get("country") or entry.get("country"),
