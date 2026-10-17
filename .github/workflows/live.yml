@@ -1,0 +1,38 @@
+name: Dados - etapas em direto
+
+on:
+  schedule:
+    - cron: "*/20 11-17 * * *"  # de 20 em 20 minutos durante as etapas europeias
+    - cron: "30 19,21 * * *"    # fecho do dia
+    - cron: "0 3,7,9 * * *"     # provas na Ásia e Oceânia
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sobrerodas-data
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Há etapas hoje?
+        id: today
+        run: python3 scripts/race-today.py >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        if: steps.today.outputs.race == 'yes'
+        with:
+          python-version: "3.12"
+          cache: pip
+      - if: steps.today.outputs.race == 'yes'
+        run: pip install -r requirements.txt
+      - name: Recolher etapa de hoje
+        if: steps.today.outputs.race == 'yes'
+        run: python -m collector live
+      - name: Guardar dados no repositório
+        if: steps.today.outputs.race == 'yes'
+        run: scripts/commit-data.sh "dados: direto"
