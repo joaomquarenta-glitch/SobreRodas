@@ -51,7 +51,7 @@
     return `${first.join(" ")} ${titleCase(sur.join(" "))}`;
   }
   const riderLink = (slug, name, nation) => `${flag(nation)}<a href="#/ciclista/${esc(slug)}">${esc(niceName(name))}</a>`;
-  const teamLink = (slug, name) => (slug ? `<a href="#/equipa/${esc(slug)}">${esc(name || slug)}</a>` : esc(name || ""));
+  const teamLink = (slug, name) => (slug ? `<a class="team-link" href="#/equipa/${esc(slug)}">${shirt(slug)}${esc(name || slug)}</a>` : esc(name || ""));
   const raceLink = (slug, year, label) => `<a href="#/prova/${esc(slug)}/${year}">${esc(label)}</a>`;
   const status = (r) => (r.start <= TODAY && TODAY <= (r.end || r.start) ? "live" : (r.end || r.start) < TODAY ? "done" : "next");
   const fmtTime = (row, i) => {
@@ -113,6 +113,8 @@
   // Fotos guardadas em data/photos/{slug}.jpg; sem foto mostra as iniciais.
   const initials = n => esc(String(n || "?").split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase());
   const avatar = (slug, name, cls = "") => `<span class="avatar ${cls}" data-i="${initials(niceName(name || ""))}"><img loading="lazy" src="${esc(SOURCES[0])}photos/${esc(slug)}.jpg" data-n="0" data-f="photos/${esc(slug)}.jpg" alt="" onerror="SR_photoError(this)"></span>`;
+  // camisola da equipa (data/shirts/{slug}.png); sem imagem não mostra nada
+  const shirt = (slug, cls = "shirt") => slug ? `<img class="${cls}" loading="lazy" src="${esc(SOURCES[0])}shirts/${esc(slug)}.png" data-n="0" data-f="shirts/${esc(slug)}.png" alt="" onerror="SR_photoError(this)">` : "";
   // foto em falta numa fonte: tenta as outras fontes e, no fim, ficam as iniciais
   window.SR_photoError = img => {
     const n = Number(img.dataset.n) + 1;
@@ -131,7 +133,7 @@
       const d = r.delta ? `<td class="r ${r.delta > 0 ? "up" : "down"}">${r.delta > 0 ? "▲" : "▼"}${Math.abs(r.delta)}</td>` : (list.some(x => x.delta !== undefined) ? `<td></td>` : "");
       if (isTeams) return `<tr><td class="rank">${esc(r.rank)}</td><td>${flag(r.nation)}${teamLink(r.team, r.name)}</td><td class="r">${esc(fmtTime(r, i))}</td></tr>`;
       const val = byPoints ? esc(r.points ?? "") : esc(fmtTime(r, i));
-      return `<tr><td class="rank">${esc(r.rank)}</td><td>${riderLink(r.rider, r.name, r.nation)}<span class="team">${esc(r.team_name || "")}</span></td><td class="r">${val}${r.bonus && !byPoints ? ` <span class="muted small">(${r.bonus}″)</span>` : ""}</td>${d}</tr>`;
+      return `<tr><td class="rank">${esc(r.rank)}</td><td>${riderLink(r.rider, r.name, r.nation)}<span class="team">${shirt(r.team)}${esc(r.team_name || "")}</span></td><td class="r">${val}${r.bonus && !byPoints ? ` <span class="muted small">(${r.bonus}″)</span>` : ""}</td>${d}</tr>`;
     }).join("");
     const more = limit && rows.length > limit ? `<button class="chip more-btn" data-kind="${esc(kind)}">Ver todos (${rows.length})</button>` : "";
     return `<div class="tbl-wrap"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${more}`;
@@ -353,7 +355,7 @@
   function startlistHtml(sl) {
     const n = sl.reduce((s, t) => s + t.riders.length, 0), out = sl.reduce((s, t) => s + t.riders.filter(r => r.status).length, 0);
     return `<details class="section panel"><summary style="cursor:pointer"><h2 style="display:inline">Participantes</h2> <span class="muted">${sl.length} equipas · ${n} ciclistas${out ? ` · ${out} desistências` : ""}</span></summary>
-      <div class="grid" style="margin-top:14px">${sl.map(t => `<div class="card"><div class="row">${t.shirt ? `<img src="${esc(t.shirt)}" alt="" referrerpolicy="no-referrer" style="width:34px">` : ""}<b>${teamLink(t.team, t.name)}</b></div>
+      <div class="grid" style="margin-top:14px">${sl.map(t => `<div class="card"><div class="row"><b>${teamLink(t.team, t.name)}</b></div>
         <ul class="small" style="list-style:none;padding:0;margin:8px 0 0">${t.riders.map(r => `<li style="${r.status ? "opacity:.5" : ""}"><span class="muted">${r.bib ?? ""}</span> ${riderLink(r.rider, r.name, r.nation)}${r.status ? ` <span class="tag">${esc(r.status)}${r.status_stage ? ` · ${r.status_stage}` : ""}</span>` : ""}</li>`).join("")}</ul></div>`).join("")}</div></details>`;
   }
   function historyHtml(hist, stageRace) {
@@ -411,7 +413,7 @@
       if (mode === "fav") { const f = new Set(favs.all().map(x => x.slug)); res = res.filter(r => f.has(r.slug)); }
       if (term) res = res.filter(r => norm(`${r.name} ${r.team_name} ${r.nation}`).includes(term));
       list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}
-        <div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
+        <div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${shirt(r.team)}${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
     };
     q.oninput = render;
     document.getElementById("rf").onclick = e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.k; document.querySelectorAll("#rf button").forEach(x => x.classList.toggle("on", x === b)); render(); };
@@ -460,10 +462,10 @@
     let html = `<div class="race-head"><div><h1>Equipas ${year}</h1><div class="muted">${teams.length} equipas</div></div></div>`;
     for (const [lvl, label] of groups) {
       const list = teams.filter(t => (t.level || "").toUpperCase() === lvl).sort((a, b) => a.name.localeCompare(b.name));
-      if (list.length) html += `<div class="section"><h2>${label}</h2><div class="grid small-cards">${list.map(t => `<a class="card" href="#/equipa/${esc(t.slug)}"><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.riders} ciclistas</div></a>`).join("")}</div></div>`;
+      if (list.length) html += `<div class="section"><h2>${label}</h2><div class="grid small-cards">${list.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.riders} ciclistas</div></div></a>`).join("")}</div></div>`;
     }
     const rest = teams.filter(t => !groups.some(([l]) => (t.level || "").toUpperCase() === l));
-    if (rest.length) html += `<div class="section"><h2>Outras</h2><div class="grid small-cards">${rest.map(t => `<a class="card" href="#/equipa/${esc(t.slug)}"><b>${flag(t.nation)}${esc(t.name)}</b></a>`).join("")}</div></div>`;
+    if (rest.length) html += `<div class="section"><h2>Outras</h2><div class="grid small-cards">${rest.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b></div></a>`).join("")}</div></div>`;
     app.innerHTML = teams.length ? html : `<div class="empty">Sem equipas para ${year}.</div>`;
   }
 
@@ -471,7 +473,7 @@
     const t = await get(`teams/${slug}.json`);
     if (!t) { app.innerHTML = `<div class="empty">Ainda não temos esta equipa. <a href="${PCS}team/${esc(slug)}" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`; return; }
     const k = t.kpi || {};
-    let html = `<div class="race-head"><div class="bigflag">${flag(t.nation)}</div><div><div class="muted">${esc(t.info && t.info.license_country || "")} · época ${t.season || ""}</div><h1>${esc(t.name)}</h1>${t.level ? `<span class="tag wt">${esc(t.level)}</span>` : ""}</div></div>
+    let html = `<div class="race-head">${shirt(slug, "shirt huge")}<div><div class="muted">${flag(t.nation)}${esc(t.info && t.info.license_country || "")} · época ${t.season || ""}</div><h1>${esc(t.name)}</h1>${t.level ? `<span class="tag wt">${esc(t.level)}</span>` : ""}</div></div>
       <div class="facts">${[["Vitórias", k.victories], ["Ranking UCI", k.uci && `${k.uci}.º`], ["Ranking PCS", k.pcs && `${k.pcs}.º`], ["Ciclistas", (t.riders || []).length], ["Bicicleta", t.gear && t.gear.Bike]]
         .filter(x => x[1]).map(([a, b]) => `<div class="fact"><div class="k">${a}</div><div class="v">${esc(b)}</div></div>`).join("")}</div>
       <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}</div></div>`;

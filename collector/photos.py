@@ -85,7 +85,7 @@ def sync_photos(fx, root, log, budget_until=None, limit=None):
         if not url or (idx.get(slug, {}).get("src") == url and (pdir / f"{slug}.jpg").exists()):
             continue
         try:
-            _save_jpeg(fx.get_bytes(url, referer=f"{BASE}rider/{slug}"), pdir / f"{slug}.jpg")
+            _save_jpeg(fx.get_bytes(url, referer=f"{BASE}rider/{quote(slug)}"), pdir / f"{slug}.jpg")
             idx[slug] = {"src": url, "from": "pcs", "date": _today()}
             done += 1
         except (FetchError, OSError) as e:
@@ -130,4 +130,64 @@ def sync_photos(fx, root, log, budget_until=None, limit=None):
     idx_path.write_text(json.dumps(idx, separators=(",", ":"), sort_keys=True))
     have = sum(1 for e in idx.values() if e.get("from") != "none")
     log(f"fotos: {done} novas; {have} no total; {len(riders) - sum(1 for s in riders if idx.get(s, {}).get('from') not in (None, 'none'))} ciclistas sem foto")
+    return done
+
+
+SHIRT_HEIGHT = 120
+
+
+def _save_png(data, dest):
+    from PIL import Image
+    im = Image.open(io.BytesIO(data)).convert("RGBA")
+    if im.height > SHIRT_HEIGHT:
+        im = im.resize((round(im.width * SHIRT_HEIGHT / im.height), SHIRT_HEIGHT), Image.LANCZOS)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    im.save(dest, "PNG", optimize=True)
+
+
+def team_shirts(fx, root, log, year):
+    """{slug_da_equipa: url_da_camisola} das startlists guardadas e da lista de equipas do PCS."""
+    out = {}
+    for f in sorted(Path(root).glob("races/*/*.json")):
+        try:
+            d = json.loads(f.read_text())
+        except ValueError:
+            continue
+        for t in (d.get("startlist") or []) if isinstance(d, dict) else []:
+            if t.get("team") and t.get("shirt"):
+                out[t["team"]] = t["shirt"]
+    for y in {year, year + 1}:
+        try:
+            h = fx.get(f"teams.php?year={y}&filter=Filter&s=worldtour", use_cache=False)
+        except FetchError as e:
+            log("lista de equipas falhou", y, e)
+            continue
+        for slug, src in re.findall(r'href="team/([^"]+)"><img src="(images/shirts/[^"]+)"', h):
+            out[slug] = BASE + src
+    return out
+
+
+def sync_shirts(fx, root, log, budget_until=None):
+    """Camisolas das equipas em data/shirts/{slug}.png (o símbolo com que se reconhecem as equipas)."""
+    import time
+    root = Path(root)
+    sdir = root / "shirts"
+    idx_path = sdir / "index.json"
+    idx = json.loads(idx_path.read_text()) if idx_path.exists() else {}
+    shirts = team_shirts(fx, root, log, datetime.now(timezone.utc).year)
+    done = 0
+    for slug, url in sorted(shirts.items()):
+        if budget_until and time.time() > budget_until:
+            break
+        if idx.get(slug) == url and (sdir / f"{slug}.png").exists():
+            continue
+        try:
+            _save_png(fx.get_bytes(url, referer=f"{BASE}team/{quote(slug)}"), sdir / f"{slug}.png")
+            idx[slug] = url
+            done += 1
+        except (FetchError, OSError) as e:
+            log("camisola falhou", slug, e)
+    sdir.mkdir(parents=True, exist_ok=True)
+    idx_path.write_text(json.dumps(idx, separators=(",", ":"), sort_keys=True))
+    log(f"camisolas: {done} novas; {len(idx)} no total")
     return done
