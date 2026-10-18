@@ -78,3 +78,14 @@ segundos), `points`, `bonus`, `prev`/`delta` (posição anterior e variação), 
 
 As fotos e imagens dos perfis são ligações para o ProCyclingStats. Os dados vêm do ProCyclingStats e são
 para uso pessoal.
+
+## Site
+
+O site está em `site/` (HTML, CSS e JavaScript simples, sem build). Lê os dados primeiro do GitHub
+(`raw.githubusercontent.com`, sempre atualizados se o repositório for público) e, se falhar, da cópia
+`data/` publicada com o site (ver `site/config.js`).
+
+Para o ver no computador: `ln -s ../data site/data && python3 -m http.server -d site 8000` e abrir http://localhost:8000.
+
+Publicação no Netlify: o `netlify.toml` já tem tudo (pasta `site`, cópia dos dados). O
+`scripts/netlify-ignore.sh` faz com que o Netlify só publique quando o site muda ou na atualização diária dos dados.

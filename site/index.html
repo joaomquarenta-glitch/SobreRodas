@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SobreRodas</title>
+<meta name="description" content="Ciclismo de estrada: calendário, resultados, etapas, ciclistas, equipas e lendas.">
+<meta name="theme-color" content="#0d0f14">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/"><img src="icon.svg" alt=""><span>Sobre<b>Rodas</b></span></a>
+  <nav class="nav" id="nav">
+    <a href="#/" data-nav="home">Início</a>
+    <a href="#/calendario" data-nav="calendario">Calendário</a>
+    <a href="#/ciclistas" data-nav="ciclistas">Ciclistas</a>
+    <a href="#/equipas" data-nav="equipas">Equipas</a>
+    <a href="#/lendas" data-nav="lendas">Lendas</a>
+    <a href="#/favoritos" data-nav="favoritos">Favoritos</a>
+  </nav>
+</header>
+<main id="app" class="wrap"><div class="loading">A carregar…</div></main>
+<footer class="foot wrap">Dados: <a href="https://www.procyclingstats.com" target="_blank" rel="noopener">ProCyclingStats</a> · <span id="updated"></span></footer>
+<script src="config.js"></script>
+<script src="legends.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

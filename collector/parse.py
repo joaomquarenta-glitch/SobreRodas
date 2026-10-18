@@ -196,9 +196,11 @@ def parse_title(h):
     out = {}
     if h1:
         full = clean(h1.text())
-        m = re.match(r"(\d{4})\s*»\s*(\d+)\w*\s+(.*?)\s*\(([^)]+)\)\s*$", full)
+        m = re.match(r"(\d{4})\s*»\s*(?:(\d+)(?:st|nd|rd|th)\s+)?(.*?)\s*\(([^)]+)\)\s*$", full)
         if m:
-            out = {"year": int(m.group(1)), "edition": int(m.group(2)), "name": m.group(3), "class": m.group(4)}
+            out = {"year": int(m.group(1)), "name": m.group(3), "class": m.group(4)}
+            if m.group(2):
+                out["edition"] = int(m.group(2))
         else:
             out = {"name": full}
     out["country"] = flag(h.css_first(".page-title"))
