@@ -342,9 +342,11 @@ def rebuild_indexes():
         r = load(f) or {}
         team = (r.get("teams") or [{}])
         cur = next((t for t in team if str(today().year) in t.get("season", "")), team[0] if team else {})
+        rk = next((x for x in r.get("pcs_ranking_by_season") or [] if x.get("season") == today().year), {})
         riders.append(P.compact({"slug": r.get("slug"), "name": r.get("name"), "nation": r.get("nation"),
                                  "birthdate": r.get("birthdate"), "photo": r.get("photo"),
-                                 "team": cur.get("team"), "team_name": cur.get("name")}))
+                                 "team": cur.get("team"), "team_name": cur.get("name"),
+                                 "rank": rk.get("rank"), "points": rk.get("points")}))
     if riders:
         save(path("riders", "index.json"), {"updated": now_iso(), "riders": riders})
     teams = {}

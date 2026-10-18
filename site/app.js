@@ -50,10 +50,21 @@
     if (!sur.length || !first.length) return n;
     return `${first.join(" ")} ${titleCase(sur.join(" "))}`;
   }
+  function surname(n) {
+    if (!n) return "";
+    const parts = n.split(" ");
+    const sur = parts.filter(p => p === p.toUpperCase() && /\p{L}/u.test(p));
+    if (sur.length && sur.length < parts.length) return titleCase(sur.join(" "));
+    return parts.length > 1 ? parts.slice(1).join(" ") : n;
+  }
   const riderLink = (slug, name, nation) => `${flag(nation)}<a href="#/ciclista/${esc(slug)}">${esc(niceName(name))}</a>`;
   const teamLink = (slug, name) => (slug ? `<a class="team-link" href="#/equipa/${esc(slug)}">${shirt(slug)}${esc(name || slug)}</a>` : esc(name || ""));
   const raceLink = (slug, year, label) => `<a href="#/prova/${esc(slug)}/${year}">${esc(label)}</a>`;
-  const status = (r) => (r.start <= TODAY && TODAY <= (r.end || r.start) ? "live" : (r.end || r.start) < TODAY ? "done" : "next");
+  const status = (r) => {
+    // terminada também quando o direto do último dia já diz "finished"
+    if ((r.end || r.start) === TODAY && (r.finished || (r.live && r.live.status && r.live.status.status === "finished"))) return "done";
+    return r.start <= TODAY && TODAY <= (r.end || r.start) ? "live" : (r.end || r.start) < TODAY ? "done" : "next";
+  };
   const fmtTime = (row, i) => {
     if (!row.time) return "";
     if (i === 0) return row.time;
@@ -237,10 +248,11 @@
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
-      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#/calendario">Ver calendário</a><a class="btn ghost" href="#/lendas">Lendas</a></div></section>`;
+      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#/calendario">Ver calendário</a><a class="btn ghost" href="#/lendas">Lendas</a></div>
+      ${await topPeloton()}</section>`;
     if (liveRaces.length) {
       html += `<section class="section"><div class="section-head"><h2>Hoje na estrada</h2></div><div class="grid">${liveRaces.map(l => `
-        <a class="card live-box" href="#/etapa/${esc(l.race)}/${l.year}/${esc(l.stage)}">
+        <a class="card live-box" href="${l.stage && l.stage !== "result" ? `#/etapa/${esc(l.race)}/${l.year}/${esc(l.stage)}` : `#/prova/${esc(l.race)}/${l.year}`}">
           <div class="row"><span class="tag live">Direto</span>${l.status && l.status.status ? `<span class="muted small">${esc(LIVE_STATUS[l.status.status] || l.status.status)}${l.status.km_to_go ? ` · faltam ${l.status.km_to_go} km` : ""}</span>` : ""}</div>
           <div class="title">${esc(cleanName(l.name))}${l.number ? ` · Etapa ${l.number}` : ""}</div><div class="muted small">${esc(l.route || "")}</div>
           ${(l.top10 || []).filter(r => /^\d+$/.test(r.rank)).slice(0, 3).map(r => `<div class="small">${esc(r.rank)}. ${flag(r.nation)}${esc(niceName(r.name))}</div>`).join("")}
@@ -275,7 +287,7 @@
     const cal = await get(`calendar/${year}.json`);
     const races = (cal && cal.races) || [];
     const years = []; for (let y = YEAR + 1; y >= 2015; y--) years.push(y);
-    app.innerHTML = `<div class="race-head"><div><h1>Calendário ${year}</h1><div class="muted">${races.length} provas</div></div>
+    app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Calendário ${year}</h1><div class="muted">${races.length} provas</div></div>
       <select id="cal-year" style="margin-left:auto">${years.map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>
       <div class="tabs" id="cal-f">${CAL_FILTERS.map((f, i) => `<button data-k="${f.key}" class="${i ? "" : "on"}">${f.label}</button>`).join("")}</div><div id="cal-body"></div>`;
     document.getElementById("cal-year").onchange = e => { location.hash = `#/calendario/${e.target.value}`; };
@@ -306,7 +318,8 @@
       return;
     }
     const st = status(race);
-    let html = `<div class="race-head"><div class="bigflag">${flag(race.country)}</div><div><div class="muted">${race.edition ? `${race.edition}.ª edição · ` : ""}${fmtRange(race.start, race.end)}</div>
+    const raceTop = rowsToRiders(race.stage_race ? (race.final || {}).gc : race.results);
+    let html = `${pelotonHtml(raceTop, { title: race.stage_race ? (race.finished || st === "done" ? "Classificação geral final" : "Classificação geral") : "Resultado", compact: true })}<div class="race-head"><div class="bigflag">${flag(race.country)}</div><div><div class="muted">${race.edition ? `${race.edition}.ª edição · ` : ""}${fmtRange(race.start, race.end)}</div>
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : ""}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
     if (race.stage_race) {
@@ -327,7 +340,8 @@
             <div>${parcoursIcon(s.parcours_code)}</div></a>`).join("")}</div></div></div></div>`;
     } else {
       const info = race.info || {};
-      html += factsHtml(info) + `<div id="profile"></div><div class="two" style="margin-top:18px"><div><h2>Resultado</h2>${classTable(race.results, "stage", 50)}</div>
+      const today = (race.date || race.start) === TODAY;
+      html += factsHtml(info) + (today ? liveBox(race.live, "Corrida terminada") : "") + `<div id="profile"></div><div class="two" style="margin-top:18px"><div><h2>Resultado</h2><div id="oneday-res">${classTable(race.results, "stage", 50)}</div></div>
         <div><h2>Subidas e sprints</h2><div class="panel">${climbsList(race.analysis || {})}</div>${race.story ? `<div class="section"><h2>Resumo</h2><p>${esc(race.story)}</p></div>` : ""}${videoLink(cleanName(race.name), year)}</div></div>`;
     }
     if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist);
@@ -335,14 +349,22 @@
     app.innerHTML = html;
     document.getElementById("race-year").onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
-    else profileChart(document.getElementById("profile"), race);
+    else {
+      profileChart(document.getElementById("profile"), race);
+      wireMore(document.getElementById("oneday-res"), race.results, "stage");
+      if ((race.date || race.start) === TODAY) refreshLater(() => { cache.delete(`races/${slug}/${year}.json`); viewRace(slug, year); });
+    }
     const ht = document.getElementById("hist-tabs");
     if (ht) {
       const keys = [["gc", "Geral", "j-gc"], ["points", "Pontos", "j-points"], ["kom", "Montanha", "j-kom"], ["youth", "Juventude", "j-youth"], ["result", "Pódios", ""]]
         .filter(([k]) => hist[k] && hist[k].length).map(([key, label, dot]) => ({ key, label, dot }));
-      tabs(ht, keys, k => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>1.º</th><th>2.º</th><th>3.º</th></tr></thead><tbody>${hist[k].map(h =>
+      tabs(ht, keys, k => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>1.º</th><th>2.º</th><th>3.º</th></tr></thead><tbody>${hist[k].map(h => ({ ...h, podium: h.podium || (h.year === year ? podiumOf(race, k) : []) })).map(h =>
         `<tr><td>${years.includes(h.year) ? raceLink(slug, h.year, h.year) : h.year}</td>${[0, 1, 2].map(i => `<td>${h.podium[i] ? riderLink(h.podium[i].slug, h.podium[i].name, h.podium[i].nation) : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
     }
+  }
+  function podiumOf(race, k) {
+    const rows = k === "result" ? race.results : (race.final || {})[k];
+    return (rows || []).filter(r => /^\d+$/.test(r.rank)).slice(0, 3).map(r => ({ slug: r.rider, name: r.name, nation: r.nation }));
   }
   function factsHtml(info) {
     const f = [["Data", fmtDate(info.date)], ["Distância", info.distance_km && `${info.distance_km} km`], ["Desnível", info.vertical_m && `${info.vertical_m} m`],
@@ -364,6 +386,7 @@
   }
 
   async function viewStage(slug, year, id) {
+    if (id === "result") return viewRace(slug, year);
     year = Number(year);
     const isToday = (s) => s && s.date === TODAY;
     const [race, stage] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/${year}/${id}.json`, { fresh: true })]);
@@ -372,17 +395,13 @@
     const i = stages.findIndex(s => s.id === id);
     const prev = stages[i - 1], next = stages[i + 1];
     const live = stage.live || {};
-    let html = `<div class="race-head"><div class="bigflag">${flag(race && race.country)}</div><div>
+    const stageTop = rowsToRiders((stage.classifications || {}).stage);
+    let html = `${pelotonHtml(stageTop, { title: `Etapa ${stage.number ?? ""}`, sub: "chegada", compact: true })}<div class="race-head"><div class="bigflag">${flag(race && race.country)}</div><div>
       <div class="muted">${raceLink(slug, year, `${race ? cleanName(race.name) : slug} ${year}`)} · ${fmtDate(stage.date)}</div>
       <h1>Etapa ${stage.number ?? ""}${stage.type ? ` (${esc(stage.type)})` : ""}</h1><h3 class="muted">${esc(stage.route || "")}</h3></div>
       <div style="margin-left:auto;display:flex;gap:6px">${prev ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${prev.id}">← ${prev.number ?? ""}</a>` : ""}${next ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${next.id}">${next.number ?? ""} →</a>` : ""}</div></div>`;
     html += factsHtml(stage.info || {});
-    if (isToday(stage) && live.status) {
-      html += `<div class="panel live-box section"><div class="row" style="display:flex;gap:10px;align-items:center"><span class="tag live">Direto</span>
-        <b>${esc(live.status.status === "finished" ? "Etapa terminada" : live.status.status || "")}</b>${live.status.km_to_go ? `<span>faltam <b>${live.status.km_to_go} km</b></span>` : ""}
-        <span class="muted small" style="margin-left:auto">atualiza sozinho</span></div>
-        ${live.timeline && live.timeline.length ? `<ul class="timeline" style="margin-top:10px">${live.timeline.slice(0, 40).map(e => `<li><span class="km">${esc(e.mark || "")}</span><span>${esc(e.text)}</span></li>`).join("")}</ul>` : ""}</div>`;
-    }
+    if (isToday(stage)) html += liveBox(live, "Etapa terminada");
     html += `<div class="section"><h2>Perfil</h2><div id="profile"></div></div>
       <div class="two"><div class="section"><h2>Classificações</h2><div id="cls"></div></div>
       <div class="section"><h2>Subidas e metas volantes</h2><div class="panel">${climbsList(stage.analysis || {})}</div>
@@ -394,13 +413,50 @@
     if (isToday(stage)) refreshLater(() => viewStage(slug, year, id));
   }
 
+  function liveBox(live, doneLabel) {
+    if (!live || !live.status) return "";
+    const st = live.status;
+    return `<div class="panel live-box section"><div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag live">Direto</span>
+      <b>${esc(st.status === "finished" ? doneLabel : LIVE_STATUS[st.status] || st.status || "")}</b>${st.km_to_go ? `<span>faltam <b>${st.km_to_go} km</b></span>` : ""}
+      <span class="muted small" style="margin-left:auto">atualiza sozinho</span></div>
+      ${live.timeline && live.timeline.length ? `<ul class="timeline" style="margin-top:10px">${live.timeline.slice(0, 40).map(e => `<li><span class="km">${e.mark && e.mark !== "0" ? esc(e.mark) : ""}</span><span>${esc(e.text)}</span></li>`).join("")}</ul>` : ""}</div>`;
+  }
+  // "Ver todos" nas tabelas que não estão dentro de separadores
+  function wireMore(el, rows, kind) {
+    if (el) el.onclick = e => { const b = e.target.closest(".more-btn"); if (b) el.innerHTML = classTable(rows, kind); };
+  }
+
+  // ------------------------------------------------------------ pelotão (montagem com fotos, em corrida)
+  // riders: [{slug, name, team, label}] por ordem (o 1.º vai à frente)
+  const LANES = [[91, 40], [81, 24], [73, 50], [63, 30], [56, 54], [48, 20], [40, 44], [32, 28], [23, 52], [13, 34]];
+  function pelotonHtml(riders, { title = "", sub = "", compact = false, link = () => true } = {}) {
+    const list = (riders || []).filter(r => r && r.slug).slice(0, 10);
+    if (!list.length) return "";
+    return `<div class="peloton${compact ? " compact" : ""}" aria-hidden="true">
+      <div class="road"><i></i></div>
+      ${title ? `<div class="pel-title"><b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</div>` : ""}
+      ${list.map((r, i) => `<a class="pr${i === 0 ? " lead" : ""}"${link(r) ? ` href="#/ciclista/${esc(r.slug)}"` : ""} style="--x:${LANES[i][0]};--y:${LANES[i][1]}%;--my:${i % 2 ? 62 : 25}%;animation-delay:${(i * 0.37) % 1.6}s" tabindex="-1">
+        <span class="pr-pic">${avatar(r.slug, r.name)}${r.team ? shirt(r.team, "pr-shirt") : ""}<span class="pr-n">${i + 1}</span></span><span class="pr-name">${esc(surname(r.name))}</span></a>`).join("")}
+    </div>`;
+  }
+  // os 10 primeiros do ranking da época
+  async function topRiders() {
+    const idx = await get("riders/index.json");
+    return ((idx && idx.riders) || []).filter(r => r.rank).sort((a, b) => a.rank - b.rank).slice(0, 10);
+  }
+  async function topPeloton(opts = {}) {
+    return pelotonHtml(await topRiders(), { title: `Top 10 de ${YEAR}`, sub: "ranking PCS", ...opts });
+  }
+  // top 10 de uma classificação (resultado de prova ou etapa)
+  const rowsToRiders = rows => (rows || []).filter(r => /^\d+$/.test(r.rank) && r.rider).map(r => ({ slug: r.rider, name: r.name, team: r.team }));
+
   let refreshTimer = null;
   function refreshLater(fn) { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => { if (document.visibilityState === "visible") fn(); else refreshLater(fn); }, 120000); }
 
   async function viewRiders() {
     const idx = await get("riders/index.json");
     const riders = (idx && idx.riders) || [];
-    app.innerHTML = `<div class="race-head"><div><h1>Ciclistas</h1><div class="muted">${riders.length} ciclistas da época ${YEAR}</div></div></div>
+    app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Ciclistas</h1><div class="muted">${riders.length} ciclistas da época ${YEAR}</div></div></div>
       <input class="search" id="q" placeholder="Procurar ciclista, país ou equipa…" autocomplete="off">
       <div class="tabs" id="rf" style="margin-top:12px"><button class="on" data-k="all">Todos</button><button data-k="pt">🇵🇹 Portugueses</button><button data-k="fav">★ Favoritos</button></div><div id="list" class="grid small-cards"></div>`;
     const q = document.getElementById("q"), list = document.getElementById("list");
@@ -459,7 +515,7 @@
     const idx = await get(`teams/index-${year}.json`);
     const teams = (idx && idx.teams) || [];
     const groups = [["WT", "WorldTeams"], ["PRT", "ProTeams"], ["CT", "Continentais"]];
-    let html = `<div class="race-head"><div><h1>Equipas ${year}</h1><div class="muted">${teams.length} equipas</div></div></div>`;
+    let html = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Equipas ${year}</h1><div class="muted">${teams.length} equipas</div></div></div>`;
     for (const [lvl, label] of groups) {
       const list = teams.filter(t => (t.level || "").toUpperCase() === lvl).sort((a, b) => a.name.localeCompare(b.name));
       if (list.length) html += `<div class="section"><h2>${label}</h2><div class="grid small-cards">${list.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.riders} ciclistas</div></div></a>`).join("")}</div></div>`;
@@ -490,16 +546,18 @@
       <div class="title">${flag(l.nation)}${esc(l.name)}</div>${l.nick ? `<div class="muted small">“${esc(l.nick)}”</div>` : ""}</div></div>
       <ul>${l.facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
       <div style="margin-top:10px">${known.has(l.slug) ? `<a class="btn" href="#/ciclista/${esc(l.slug)}">Ficha completa</a>` : `<a class="btn ghost" target="_blank" rel="noopener" href="${PCS}rider/${esc(l.slug)}">Palmarés ↗</a>`}</div></div>`;
-    app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1><p class="muted">Quem escreveu a história do ciclismo, no mundo e em Portugal.</p></section>
+    const legendRiders = [...L.mundo.slice(0, 7), ...L.portugal.slice(0, 3)].map(l => ({ slug: l.slug, name: l.name }));
+    app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1><p class="muted">Quem escreveu a história do ciclismo, no mundo e em Portugal.</p>
+      ${pelotonHtml(legendRiders, { link: r => known.has(r.slug) })}</section>
       <div class="section"><h2>🇵🇹 Lendas portuguesas</h2><div class="grid">${L.portugal.map(card).join("")}</div></div>
       <div class="section"><h2>🌍 Lendas mundiais</h2><div class="grid">${L.mundo.map(card).join("")}</div></div>`;
   }
 
   async function viewFavorites() {
     const list = favs.all();
-    if (!list.length) { app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista. Abre a ficha de um ciclista e carrega em “☆ Seguir”.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; return; }
+    if (!list.length) { app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista. Abre a ficha de um ciclista e carrega em “☆ Seguir”.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; return; }
     const riders = await Promise.all(list.map(f => get(`riders/${f.slug}.json`)));
-    app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map((f, i) => {
+    app.innerHTML = `${pelotonHtml(list.map((f, i) => ({ slug: f.slug, name: (riders[i] && riders[i].name) || f.name, team: riders[i] && ((riders[i].teams || [])[0] || {}).team })), { title: "Os teus ciclistas", compact: true })}<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map((f, i) => {
       const r = riders[i] || {};
       const last = (r.season_results || [])[0];
       const lastStage = last && last.stages && last.stages[0];
@@ -515,6 +573,43 @@
   }
 
   // ------------------------------------------------------------ router
+  // ------------------------------------------------------------ app instalável
+  let installEvent = null;
+  const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    installEvent = e;
+    const b = document.getElementById("install");
+    if (b) b.hidden = false;
+  });
+  window.addEventListener("appinstalled", () => { installEvent = null; const b = document.getElementById("install"); if (b) b.hidden = true; });
+  async function install() {
+    if (!installEvent) { location.hash = "#/app"; return; }
+    installEvent.prompt();
+    await installEvent.userChoice.catch(() => null);
+    installEvent = null;
+    document.getElementById("install").hidden = true;
+  }
+  const installBtn = document.getElementById("install");
+  if (installBtn) installBtn.onclick = install;
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(e => console.warn("service worker", e)));
+  }
+
+  async function viewApp() {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>SobreRodas no telemóvel</h1><div class="muted">Instala o site como uma app: abre em ecrã inteiro, com ícone próprio, e funciona sem rede com os últimos dados vistos.</div></div></div>
+      ${isStandalone() ? `<div class="panel">✅ Já estás a usar a app instalada.</div>` : `
+      ${installEvent ? `<p><button class="btn" id="install2">⬇ Instalar agora</button></p>` : ""}
+      <div class="grid">
+        <div class="card"><div class="title">iPhone e iPad</div><ol class="small"><li>Abre o site no <b>Safari</b>.</li><li>Carrega no botão <b>Partilhar</b> (quadrado com seta para cima).</li><li>Escolhe <b>Adicionar ao ecrã principal</b> e depois <b>Adicionar</b>.</li></ol>${ios ? `<div class="tag wt">É o teu caso</div>` : ""}</div>
+        <div class="card"><div class="title">Android</div><ol class="small"><li>Abre o site no <b>Chrome</b>.</li><li>Carrega em <b>⋮</b> (canto superior direito).</li><li>Escolhe <b>Instalar app</b> ou <b>Adicionar ao ecrã principal</b>.</li></ol></div>
+        <div class="card"><div class="title">Computador</div><ol class="small"><li>No <b>Chrome</b> ou <b>Edge</b>, carrega no ícone de instalar na barra de endereço.</li><li>Ou usa o botão <b>⬇ Instalar app</b> no topo da página.</li></ol></div>
+      </div>`}`;
+    const b2 = document.getElementById("install2");
+    if (b2) b2.onclick = install;
+  }
+
   const routes = [
     [/^$/, viewHome, "home"],
     [/^calendario(?:\/(\d{4}))?$/, viewCalendar, "calendario"],
@@ -526,6 +621,7 @@
     [/^equipa\/([^/]+)$/, viewTeam, "equipas"],
     [/^lendas$/, viewLegends, "lendas"],
     [/^favoritos$/, viewFavorites, "favoritos"],
+    [/^app$/, viewApp, ""],
   ];
   async function route() {
     clearTimeout(refreshTimer);
