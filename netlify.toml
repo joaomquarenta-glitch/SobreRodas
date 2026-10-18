@@ -1,0 +1,12 @@
+# Site SobreRodas no Netlify. Não há build a sério: copia-se a pasta data/ para junto do site.
+[build]
+  base = "/"
+  publish = "site"
+  command = "rm -rf site/data && cp -r data site/data"
+  # Só publica quando o site muda ou na atualização diária dos dados (poupa as publicações do plano grátis).
+  ignore = "bash scripts/netlify-ignore.sh"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
