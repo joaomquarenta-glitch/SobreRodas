@@ -7,6 +7,7 @@ Comandos (python -m collector <comando>):
   live                         etapas de hoje: resultados, classificações e cronologia ao minuto
   backfill [--from Y]          histórico de edições anteriores
   rider SLUG / team SLUG       uma ficha
+  photos                       fotos dos ciclistas (PCS e Wikidata) em data/photos/
 """
 import argparse
 import json
@@ -19,6 +20,7 @@ from pathlib import Path
 
 from . import parse as P
 from . import profile as PR
+from .photos import sync_photos
 from .fetch import FetchError, Fetcher
 
 ROOT = Path(os.environ.get("SOBRERODAS_DATA", Path(__file__).resolve().parent.parent / "data"))
@@ -434,6 +436,8 @@ def cmd_daily(fx, args):
     if time.time() < budget_until:
         refresh_people(fx, t.year, args.max_riders, args.max_teams)
     rebuild_indexes()
+    # fotos novas ou mudadas (no máximo 10 minutos; o resto fica para o dia seguinte)
+    sync_photos(fx, ROOT, log, budget_until=time.time() + 600)
     write_meta(fx)
 
 
@@ -541,6 +545,9 @@ def main(argv=None):
     tm = sub.add_parser("team")
     tm.add_argument("slug")
     sub.add_parser("indexes")
+    ph = sub.add_parser("photos")
+    ph.add_argument("--minutes", type=float, default=120)
+    ph.add_argument("--limit", type=int)
     args = ap.parse_args(argv)
     fx = Fetcher()
     if args.cmd == "calendar":
@@ -560,6 +567,8 @@ def main(argv=None):
         update_team(fx, args.slug)
     elif args.cmd == "indexes":
         rebuild_indexes()
+    elif args.cmd == "photos":
+        sync_photos(fx, ROOT, log, budget_until=time.time() + args.minutes * 60, limit=args.limit)
     log(f"feito: {fx.count} pedidos")
 
 

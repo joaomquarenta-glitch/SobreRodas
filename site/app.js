@@ -110,6 +110,14 @@
     { key: "stage", label: "Etapa" }, { key: "gc", label: "Geral", dot: "j-gc" }, { key: "points", label: "Pontos", dot: "j-points" },
     { key: "kom", label: "Montanha", dot: "j-kom" }, { key: "youth", label: "Juventude", dot: "j-youth" }, { key: "teams", label: "Equipas", dot: "j-teams" },
   ];
+  // Fotos guardadas em data/photos/{slug}.jpg; sem foto mostra as iniciais.
+  const initials = n => esc(String(n || "?").split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase());
+  const avatar = (slug, name, cls = "") => `<span class="avatar ${cls}" data-i="${initials(niceName(name || ""))}"><img loading="lazy" src="${esc(SOURCES[0])}photos/${esc(slug)}.jpg" data-n="0" data-f="photos/${esc(slug)}.jpg" alt="" onerror="SR_photoError(this)"></span>`;
+  // foto em falta numa fonte: tenta as outras fontes e, no fim, ficam as iniciais
+  window.SR_photoError = img => {
+    const n = Number(img.dataset.n) + 1;
+    if (n < SOURCES.length) { img.dataset.n = n; img.src = SOURCES[n] + img.dataset.f; } else img.remove();
+  };
   const LIVE_STATUS = { prerace: "antes da partida", racing: "em corrida", finished: "terminada" };
   const cleanName = n => String(n || "").replace(/^\d{4}\s*»\s*/, "").replace(/\s*\((?:1|2)\.[A-Za-z]+\)$/, "");
   function classTable(rows, kind, limit = 0) {
@@ -402,7 +410,7 @@
       if (mode === "pt") res = res.filter(r => r.nation === "pt");
       if (mode === "fav") { const f = new Set(favs.all().map(x => x.slug)); res = res.filter(r => f.has(r.slug)); }
       if (term) res = res.filter(r => norm(`${r.name} ${r.team_name} ${r.nation}`).includes(term));
-      list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}"><img class="avatar" loading="lazy" referrerpolicy="no-referrer" src="${esc(r.photo || "icon.svg")}" alt="" onerror="this.src='icon.svg'">
+      list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}
         <div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
     };
     q.oninput = render;
@@ -418,7 +426,7 @@
     const age = r.birthdate ? Math.floor((Date.now() - new Date(r.birthdate)) / 31557600000) : null;
     const maxSpec = Math.max(1, ...Object.values(r.specialties || {}));
     const team = (r.teams || []).find(t => String(t.season).includes(String(YEAR))) || (r.teams || [])[0];
-    let html = `<div class="race-head"><img class="avatar big" referrerpolicy="no-referrer" src="${esc(r.photo || "icon.svg")}" alt="" onerror="this.src='icon.svg'"><div>
+    let html = `<div class="race-head">${avatar(slug, r.name, "big")}<div>
       <div class="muted">${flag(r.nation)}${esc(r.nationality || "")}${team ? ` · ${teamLink(team.team, team.name)}` : ""}</div><h1>${esc(r.name)}</h1>
       <div class="row" style="display:flex;gap:8px;align-items:center">${starBtn(slug, r.name)}<a class="muted small" target="_blank" rel="noopener" href="${PCS}rider/${esc(slug)}">ProCyclingStats ↗</a></div></div></div>
       <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`],
@@ -466,7 +474,7 @@
     let html = `<div class="race-head"><div class="bigflag">${flag(t.nation)}</div><div><div class="muted">${esc(t.info && t.info.license_country || "")} · época ${t.season || ""}</div><h1>${esc(t.name)}</h1>${t.level ? `<span class="tag wt">${esc(t.level)}</span>` : ""}</div></div>
       <div class="facts">${[["Vitórias", k.victories], ["Ranking UCI", k.uci && `${k.uci}.º`], ["Ranking PCS", k.pcs && `${k.pcs}.º`], ["Ciclistas", (t.riders || []).length], ["Bicicleta", t.gear && t.gear.Bike]]
         .filter(x => x[1]).map(([a, b]) => `<div class="fact"><div class="k">${a}</div><div class="v">${esc(b)}</div></div>`).join("")}</div>
-      <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}"><img class="avatar" loading="lazy" referrerpolicy="no-referrer" src="${esc(r.photo || "icon.svg")}" alt="" onerror="this.src='icon.svg'"><div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}</div></div>`;
+      <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}</div></div>`;
     if ((t.victories || []).length) html += `<div class="section"><h2>Vitórias</h2><div class="tbl-wrap"><table class="tbl"><tbody>${t.victories.map(v => `<tr><td>${v.race ? raceLink(v.race, v.year, v.label) : esc(v.label)}</td><td>${classTag(v.class)}</td><td>${v.rider ? riderLink(v.rider, v.rider_name) : ""}</td></tr>`).join("")}</tbody></table></div></div>`;
     if ((t.staff || []).length) html += `<div class="section"><h2>Staff</h2><div class="panel small">${t.staff.map(s => `<div>${esc(s.name)} <span class="muted">· ${esc(s.role)}</span></div>`).join("")}</div></div>`;
     app.innerHTML = html;
@@ -476,8 +484,8 @@
     const idx = await get("riders/index.json");
     const known = new Set(((idx && idx.riders) || []).map(r => r.slug));
     const L = window.SOBRERODAS_LEGENDS || { mundo: [], portugal: [] };
-    const card = l => `<div class="card legend-card"><div class="yrs">${esc(l.years)}${l.active ? " · em atividade" : ""}</div>
-      <div class="title">${flag(l.nation)}${esc(l.name)}</div>${l.nick ? `<div class="muted small">“${esc(l.nick)}”</div>` : ""}
+    const card = l => `<div class="card legend-card"><div class="rider-card">${avatar(l.slug, l.name, "legend")}<div><div class="yrs">${esc(l.years)}${l.active ? " · em atividade" : ""}</div>
+      <div class="title">${flag(l.nation)}${esc(l.name)}</div>${l.nick ? `<div class="muted small">“${esc(l.nick)}”</div>` : ""}</div></div>
       <ul>${l.facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
       <div style="margin-top:10px">${known.has(l.slug) ? `<a class="btn" href="#/ciclista/${esc(l.slug)}">Ficha completa</a>` : `<a class="btn ghost" target="_blank" rel="noopener" href="${PCS}rider/${esc(l.slug)}">Palmarés ↗</a>`}</div></div>`;
     app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1><p class="muted">Quem escreveu a história do ciclismo, no mundo e em Portugal.</p></section>
@@ -493,7 +501,7 @@
       const r = riders[i] || {};
       const last = (r.season_results || [])[0];
       const lastStage = last && last.stages && last.stages[0];
-      return `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}"><img class="avatar" referrerpolicy="no-referrer" src="${esc(r.photo || "icon.svg")}" alt="" onerror="this.src='icon.svg'"><div><b>${flag(r.nation)}${esc(r.name || f.name)}</b><div class="muted small">${esc(((r.teams || [])[0] || {}).name || "")}</div></div></a>
+      return `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}">${avatar(f.slug, r.name || f.name)}<div><b>${flag(r.nation)}${esc(r.name || f.name)}</b><div class="muted small">${esc(((r.teams || [])[0] || {}).name || "")}</div></div></a>
         ${last ? `<div class="small" style="margin-top:10px"><span class="muted">Último:</span> ${esc(last.label || "")}${(lastStage || last).result ? ` — <b>${esc((lastStage || last).result)}</b>` : ""}${lastStage ? ` <span class="muted">(${esc(lastStage.label)})</span>` : ""}</div>` : ""}
         <div style="margin-top:10px">${starBtn(f.slug, f.name)}</div></div>`;
     }).join("")}</div>`;

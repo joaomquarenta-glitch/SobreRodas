@@ -68,3 +68,28 @@ class Fetcher:
             self._rotate()
             time.sleep(2 ** attempt)
         raise FetchError(f"{url}: {last_err}")
+
+    def get_bytes(self, url, referer=None, delay=True):
+        """Descarrega um ficheiro binário (imagens). O PCS só serve imagens com Referer do próprio site."""
+        headers = {"Accept": "image/avif,image/webp,image/*,*/*;q=0.8"}
+        if referer:
+            headers["Referer"] = referer
+        last_err = None
+        for attempt in range(3):
+            if delay:
+                self._wait()
+            try:
+                r = self._session.get(url, timeout=40, headers=headers)
+            except Exception as e:
+                last_err = e
+                time.sleep(2 ** attempt)
+                continue
+            self.count += 1
+            if r.status_code == 200 and r.headers.get("content-type", "").startswith("image/"):
+                return r.content
+            if r.status_code == 404:
+                raise FetchError(f"404 {url}")
+            last_err = f"HTTP {r.status_code}"
+            self._rotate()
+            time.sleep(2 ** attempt)
+        raise FetchError(f"{url}: {last_err}")
