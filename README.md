@@ -79,6 +79,10 @@ segundos), `points`, `bonus`, `prev`/`delta` (posição anterior e variação), 
 As fotos e imagens dos perfis são ligações para o ProCyclingStats. Os dados vêm do ProCyclingStats e são
 para uso pessoal.
 
+## Fotos
+
+`data/photos/{slug}.jpg` (240 px de largura) com `data/photos/index.json` a dizer de onde veio cada uma. O PCS não deixa outros sites mostrar as fotos dele, por isso são descarregadas (`python -m collector photos`, e também na atualização diária). Quem não tem foto no PCS, e as lendas, é procurado na Wikidata (propriedade P1663, ID do ProCyclingStats).
+
 ## Site
 
 O site está em `site/` (HTML, CSS e JavaScript simples, sem build). Lê os dados primeiro do GitHub

@@ -124,8 +124,12 @@ input.search { width: 100%; max-width: 420px; background: var(--panel2); color: 
 
 /* ciclistas */
 .rider-card { display: flex; gap: 12px; align-items: center; }
-.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--panel2); flex: none; border: 2px solid var(--line); }
+.avatar { position: relative; display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: var(--panel2); flex: none; border: 2px solid var(--line); }
+.avatar::before { content: attr(data-i); font-family: var(--head); font-weight: 700; font-size: 20px; color: var(--muted); }
+.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .avatar.big { width: 140px; height: 140px; border-radius: 18px; }
+.avatar.big::before { font-size: 48px; }
+.avatar.legend { width: 72px; height: 72px; }
 .bars .bar { display: grid; grid-template-columns: 90px 1fr 54px; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
 .bars .track { height: 9px; border-radius: 9px; background: var(--panel2); overflow: hidden; }
 .bars .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--pink)); }
