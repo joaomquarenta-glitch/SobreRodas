@@ -1,0 +1,46 @@
+{
+  "_comment": "Que provas o SobreRodas segue. Consultas ao calendário do PCS (races.php), classes aceites e provas extra por slug.",
+  "calendar_queries": [
+    "circuit=1",
+    "circuit=26",
+    "circuit=2",
+    "circuit=13&class=CC",
+    "circuit=13&class=2.1",
+    "circuit=23&class=NC"
+  ],
+  "classes": [
+    "1.UWT",
+    "2.UWT",
+    "1.Pro",
+    "2.Pro"
+  ],
+  "championship_classes": [
+    "WC",
+    "CC"
+  ],
+  "extra_slugs": [
+    "volta-a-portugal"
+  ],
+  "exclude_name_patterns": [
+    "\\bW[EUJ]\\b",
+    "\\bM[UJ]\\b",
+    "Women",
+    "Femmes",
+    "Donne",
+    "Femenina",
+    "Mixed",
+    "Ladies"
+  ],
+  "history_full_stages": [
+    "tour-de-france",
+    "giro-d-italia",
+    "vuelta-a-espana",
+    "volta-a-portugal"
+  ],
+  "history_from": 2015,
+  "history_stages_from": 2020,
+  "extra_name_patterns": [
+    "^Volta a Portugal",
+    "National Championships Portugal ME\\b"
+  ]
+}

@@ -1,0 +1,25 @@
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+    paths: ["collector/**", "tests/**", "requirements.txt", ".github/workflows/ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt pytest
+      - run: python -m pytest -q tests
+      - name: ProCyclingStats acessível a partir do GitHub
+        env:
+          SOBRERODAS_DATA: ${{ runner.temp }}/data
+        run: |
+          python -m collector race milano-sanremo 2026
+          python -c "import json,os; r=json.load(open(os.environ['SOBRERODAS_DATA']+'/races/milano-sanremo/2026.json')); assert r['results'][0]['rider']=='tadej-pogacar'; print('PCS ok')"
