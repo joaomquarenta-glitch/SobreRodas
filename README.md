@@ -83,6 +83,8 @@ para uso pessoal.
 
 `data/photos/{slug}.jpg` (240 px de largura) com `data/photos/index.json` a dizer de onde veio cada uma. O PCS não deixa outros sites mostrar as fotos dele, por isso são descarregadas (`python -m collector photos`, e também na atualização diária). Quem não tem foto no PCS, e as lendas, é procurado na Wikidata (propriedade P1663, ID do ProCyclingStats).
 
+As camisolas das equipas (o símbolo que se usa para as reconhecer) ficam em `data/shirts/{slug}.png`, vindas das startlists e da lista de equipas do PCS.
+
 ## Site
 
 O site está em `site/` (HTML, CSS e JavaScript simples, sem build). Lê os dados primeiro do GitHub

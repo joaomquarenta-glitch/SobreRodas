@@ -152,3 +152,10 @@ input.search { width: 100%; max-width: 420px; background: var(--panel2); color: 
 .btn.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
 .btn:hover { color: #111; filter: brightness(1.08); }
 .btn.ghost:hover { color: var(--accent); }
+
+/* camisolas das equipas */
+.shirt { height: 18px; width: auto; vertical-align: -4px; margin-right: 6px; }
+.shirt.big { height: 46px; margin: 0; flex: none; }
+.shirt.huge { height: 110px; margin: 0; }
+.team-card { display: flex; gap: 12px; align-items: center; }
+.team-link { white-space: nowrap; }

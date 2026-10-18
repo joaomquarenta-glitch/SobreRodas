@@ -7,7 +7,7 @@ Comandos (python -m collector <comando>):
   live                         etapas de hoje: resultados, classificações e cronologia ao minuto
   backfill [--from Y]          histórico de edições anteriores
   rider SLUG / team SLUG       uma ficha
-  photos                       fotos dos ciclistas (PCS e Wikidata) em data/photos/
+  photos                       fotos dos ciclistas (PCS e Wikidata) e camisolas das equipas
 """
 import argparse
 import json
@@ -20,7 +20,7 @@ from pathlib import Path
 
 from . import parse as P
 from . import profile as PR
-from .photos import sync_photos
+from .photos import sync_photos, sync_shirts
 from .fetch import FetchError, Fetcher
 
 ROOT = Path(os.environ.get("SOBRERODAS_DATA", Path(__file__).resolve().parent.parent / "data"))
@@ -438,6 +438,7 @@ def cmd_daily(fx, args):
     rebuild_indexes()
     # fotos novas ou mudadas (no máximo 10 minutos; o resto fica para o dia seguinte)
     sync_photos(fx, ROOT, log, budget_until=time.time() + 600)
+    sync_shirts(fx, ROOT, log, budget_until=time.time() + 300)
     write_meta(fx)
 
 
@@ -569,6 +570,7 @@ def main(argv=None):
         rebuild_indexes()
     elif args.cmd == "photos":
         sync_photos(fx, ROOT, log, budget_until=time.time() + args.minutes * 60, limit=args.limit)
+        sync_shirts(fx, ROOT, log, budget_until=time.time() + args.minutes * 60)
     log(f"feito: {fx.count} pedidos")
 
 
