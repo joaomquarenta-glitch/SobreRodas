@@ -2,18 +2,6 @@
 (() => {
   "use strict";
 
-  // Diagnóstico visual: se algo falhar, avisa no ecrã em vez de congelar
-  window.onerror = function(msg, url, line) {
-    const el = document.getElementById("app");
-    if (el) {
-      el.innerHTML = `<div style="padding:24px;background:#2d1414;color:#ff8888;border:1px solid #ff4d4d;border-radius:12px;margin:20px;font-family:sans-serif">
-        <h3 style="margin:0 0 8px;color:#fff">⚠️ Aviso de Carregamento</h3>
-        <p style="margin:4px 0">${msg}</p>
-        <p style="margin:4px 0;font-size:12px;opacity:0.8">Linha ${line}</p>
-      </div>`;
-    }
-  };
-
   let SOURCES = [].concat(window.SOBRERODAS_DATA || "data/");
   const PCS = "https://www.procyclingstats.com/";
   const app = document.getElementById("app");
@@ -21,7 +9,7 @@
   const TODAY = new Date().toISOString().slice(0, 10);
   const YEAR = Number(TODAY.slice(0, 4));
 
-  // Injetar estilos dinâmicos (Ticker de notícias, Duelo e Votação)
+  // Injetar estilos do Ticker e Duelo
   try {
     const dynamicStyles = document.createElement("style");
     dynamicStyles.textContent = `
@@ -32,15 +20,6 @@
       .ticker-item b { color: var(--accent); }
       @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-      .spotlight-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh; }
-      .spotlight-modal { width: 92%; max-width: 620px; background: #161b26; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden; animation: popIn .2s ease-out; }
-      @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-      .spotlight-input-wrap { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); gap: 12px; }
-      .spotlight-input { width: 100%; background: none; border: none; outline: none; color: #fff; font-size: 17px; font-family: inherit; }
-      .spotlight-results { max-height: 380px; overflow-y: auto; padding: 10px; }
-      .spotlight-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; color: var(--text); transition: background .15s; cursor: pointer; text-decoration: none; }
-      .spotlight-item:hover { background: rgba(255,255,255,0.06); color: var(--accent); }
-
       .poll-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 8px 0; cursor: pointer; transition: all .2s; }
       .poll-card:hover { border-color: var(--accent); transform: translateX(3px); }
       .poll-bar { height: 7px; background: rgba(255,255,255,0.08); border-radius: 7px; overflow: hidden; margin-top: 8px; }
@@ -49,22 +28,12 @@
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
 
-  // Carregamento com proteção contra bloqueios de rede
+  // ------------------------------------------------------------ utilitários
   async function load(path, fresh) {
     for (const src of SOURCES) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000);
-        const r = await fetch(src + path + (fresh ? `?t=${Date.now()}` : ""), { 
-          cache: fresh ? "no-store" : "default",
-          signal: controller.signal 
-        });
-        clearTimeout(timeoutId);
-
-        if (r.ok) { 
-          if (SOURCES[0] !== src) SOURCES = [src, ...SOURCES.filter(x => x !== src)]; 
-          return await r.json(); 
-        }
+        const r = await fetch(src + path + (fresh ? `?t=${Date.now()}` : ""), { cache: fresh ? "no-store" : "default" });
+        if (r.ok) { if (SOURCES[0] !== src) SOURCES = [src, ...SOURCES.filter(x => x !== src)]; return await r.json(); }
         if (r.status === 404 && src === SOURCES[0] && path !== "meta.json") {
           const m = await fetch(src + "meta.json", { cache: "default" }).catch(() => null);
           if (m && m.ok) return null;
@@ -74,14 +43,12 @@
     }
     return null;
   }
-
   async function get(path, { fresh = false } = {}) {
     if (!fresh && cache.has(path)) return cache.get(path);
     const p = load(path, fresh);
     if (!fresh) cache.set(path, p);
     return p;
   }
-
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
   // Bandeiras nítidas em alta definição
@@ -96,7 +63,6 @@
   const fmtDate = iso => (iso ? `${Number(iso.slice(8, 10))} ${MESES[Number(iso.slice(5, 7)) - 1]}` : "");
   const fmtRange = (a, b) => (!b || a === b ? fmtDate(a) : `${fmtDate(a)} – ${fmtDate(b)}`);
   const titleCase = w => w.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
-  
   function niceName(n) {
     if (!n) return "";
     const parts = n.split(" ");
@@ -105,7 +71,6 @@
     if (!sur.length || !first.length) return n;
     return `${first.join(" ")} ${titleCase(sur.join(" "))}`;
   }
-
   function surname(n) {
     if (!n) return "";
     const parts = n.split(" ");
@@ -113,22 +78,18 @@
     if (sur.length && sur.length < parts.length) return titleCase(sur.join(" "));
     return parts.length > 1 ? parts.slice(1).join(" ") : n;
   }
-
   const riderLink = (slug, name, nation) => `${flag(nation)}<a href="#/ciclista/${esc(slug)}">${esc(niceName(name))}</a>`;
   const teamLink = (slug, name) => (slug ? `<a class="team-link" href="#/equipa/${esc(slug)}">${shirt(slug)}${esc(name || slug)}</a>` : esc(name || ""));
   const raceLink = (slug, year, label) => `<a href="#/prova/${esc(slug)}/${year}">${esc(label)}</a>`;
-  
   const status = (r) => {
     if ((r.end || r.start) === TODAY && (r.finished || (r.live && r.live.status && r.live.status.status === "finished"))) return "done";
     return r.start <= TODAY && TODAY <= (r.end || r.start) ? "live" : (r.end || r.start) < TODAY ? "done" : "next";
   };
-
   const fmtTime = (row, i) => {
     if (!row.time) return "";
     if (i === 0) return row.time;
     return row.time.startsWith("+") ? row.time : `+${row.time}`;
   };
-
   const PARCOURS = { 1: "Plano", 2: "Ondulado, final plano", 3: "Ondulado, chegada em subida", 4: "Montanha, final plano", 5: "Montanha, chegada em alto" };
   const parcoursIcon = c => {
     const shapes = {
@@ -137,7 +98,6 @@
     };
     return `<svg class="ptype" viewBox="0 0 44 22"><path d="${shapes[c] || shapes[1]}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
   };
-
   const isWT = c => /UWT|WC/.test(c || "");
   const classTag = c => `<span class="tag ${isWT(c) ? "wt" : ""}">${esc(c)}</span>`;
   const FAVS_KEY = "sobrerodas:favs";
@@ -151,10 +111,8 @@
       return this.has(item.slug);
     },
   };
-
   const starBtn = (slug, name) =>
     `<button class="star ${favs.has(slug) ? "on" : ""}" data-fav="${esc(slug)}" data-name="${esc(name)}">${favs.has(slug) ? "★ A seguir" : "☆ Seguir"}</button>`;
-
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-fav]");
     if (!b) return;
@@ -182,20 +140,18 @@
     if (items.length) show(items[0].key);
   }
 
+  // ------------------------------------------------------------ tabelas de classificação
   const CLS = [
     { key: "stage", label: "Etapa" }, { key: "gc", label: "Geral", dot: "j-gc" }, { key: "points", label: "Pontos", dot: "j-points" },
     { key: "kom", label: "Montanha", dot: "j-kom" }, { key: "youth", label: "Juventude", dot: "j-youth" }, { key: "teams", label: "Equipas", dot: "j-teams" },
   ];
-
   const initials = n => esc(String(n || "?").split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase());
   const avatar = (slug, name, cls = "") => `<span class="avatar ${cls}" data-i="${initials(niceName(name || ""))}"><img loading="lazy" src="${esc(SOURCES[0])}photos/${esc(slug)}.jpg" data-n="0" data-f="photos/${esc(slug)}.jpg" alt="" onerror="SR_photoError(this)"></span>`;
   const shirt = (slug, cls = "shirt") => slug ? `<img class="${cls}" loading="lazy" src="${esc(SOURCES[0])}shirts/${esc(slug)}.png" data-n="0" data-f="shirts/${esc(slug)}.png" alt="" onerror="SR_photoError(this)">` : "";
-
   window.SR_photoError = img => {
     const n = Number(img.dataset.n) + 1;
     if (n < SOURCES.length) { img.dataset.n = n; img.src = SOURCES[n] + img.dataset.f; } else img.remove();
   };
-
   const LIVE_STATUS = { prerace: "antes da partida", racing: "em corrida", finished: "terminada" };
   const cleanName = n => String(n || "").replace(/^\d{4}\s*»\s*/, "").replace(/\s*\((?:1|2)\.[A-Za-z]+\)$/, "");
 
@@ -227,6 +183,7 @@
     };
   }
 
+  // ------------------------------------------------------------ TICKER DE NOTÍCIAS AO VIVO
   function renderTicker() {
     let wrap = document.getElementById("sobrerodas-ticker");
     if (!wrap) {
@@ -249,135 +206,7 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  let spotlightData = null;
-  async function openSpotlight() {
-    let modal = document.getElementById("spotlight");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "spotlight";
-      modal.className = "spotlight-backdrop";
-      modal.innerHTML = `
-        <div class="spotlight-modal">
-          <div class="spotlight-input-wrap">
-            <span style="font-size:18px">🔍</span>
-            <input class="spotlight-input" id="spotlight-q" placeholder="Procurar ciclista, equipa ou corrida… (Esc para fechar)" autocomplete="off">
-            <span class="tag" style="font-size:11px">ESC</span>
-          </div>
-          <div class="spotlight-results" id="spotlight-results">
-            <div class="muted small" style="padding:16px;text-align:center">Começa a escrever para pesquisar em tempo real…</div>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      modal.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
-    }
-    modal.style.display = "flex";
-    const inp = document.getElementById("spotlight-q");
-    inp.value = "";
-    inp.focus();
-
-    if (!spotlightData) {
-      const [ridersIdx, teamsIdx, cal] = await Promise.all([get("riders/index.json"), get(`teams/index-${YEAR}.json`), get(`calendar/${YEAR}.json`)]);
-      spotlightData = {
-        riders: (ridersIdx && ridersIdx.riders) || [],
-        teams: (teamsIdx && teamsIdx.teams) || [],
-        races: (cal && cal.races) || []
-      };
-    }
-
-    const resBox = document.getElementById("spotlight-results");
-    inp.oninput = () => {
-      const q = inp.value.trim().toLowerCase();
-      if (!q) { resBox.innerHTML = `<div class="muted small" style="padding:16px;text-align:center">Escreve o nome de um atleta, equipa ou corrida…</div>`; return; }
-      
-      const rMatch = spotlightData.riders.filter(r => (r.name || "").toLowerCase().includes(q)).slice(0, 4);
-      const tMatch = spotlightData.teams.filter(t => (t.name || "").toLowerCase().includes(q)).slice(0, 3);
-      const cMatch = spotlightData.races.filter(c => (c.name || "").toLowerCase().includes(q)).slice(0, 3);
-
-      if (!rMatch.length && !tMatch.length && !cMatch.length) {
-        resBox.innerHTML = `<div class="muted small" style="padding:16px;text-align:center">Sem resultados para "<b>${esc(q)}</b>"</div>`;
-        return;
-      }
-
-      let resHtml = "";
-      if (rMatch.length) {
-        resHtml += `<div class="muted small" style="padding:4px 8px;font-weight:700">CICLISTAS</div>`;
-        resHtml += rMatch.map(r => `<a class="spotlight-item" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${shirt(r.team)}${esc(r.team_name || "")}</div></div></a>`).join("");
-      }
-      if (tMatch.length) {
-        resHtml += `<div class="muted small" style="padding:10px 8px 4px;font-weight:700">EQUIPAS</div>`;
-        resHtml += tMatch.map(t => `<a class="spotlight-item" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.level || "Equipa"}</div></div></a>`).join("");
-      }
-      if (cMatch.length) {
-        resHtml += `<div class="muted small" style="padding:10px 8px 4px;font-weight:700">PROVAS</div>`;
-        resHtml += cMatch.map(c => `<a class="spotlight-item" href="#/prova/${esc(c.slug)}/${c.year || YEAR}">🏁<div><b>${flag(c.country)}${esc(cleanName(c.name))}</b><div class="muted small">${fmtRange(c.start, c.end)}</div></div></a>`).join("");
-      }
-      resBox.innerHTML = resHtml;
-      resBox.querySelectorAll("a").forEach(a => { a.onclick = () => { modal.style.display = "none"; }; });
-    };
-  }
-
-  window.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-      e.preventDefault();
-      openSpotlight();
-    }
-    if (e.key === "Escape") {
-      const modal = document.getElementById("spotlight");
-      if (modal) modal.style.display = "none";
-    }
-  });
-
-  function racePollHtml(race, slug, year) {
-    const pollKey = `sobrerodas:poll:${slug}:${year}`;
-    const myVote = localStorage.getItem(pollKey);
-
-    let contenders = [];
-    if (race.startlist && race.startlist.length) {
-      contenders = race.startlist.flatMap(t => (t.riders || []).slice(0, 1)).slice(0, 4);
-    }
-    if (!contenders.length) return "";
-
-    const baseWeights = [42, 28, 18, 12];
-    return `<div class="section">
-      <div class="panel" style="background:linear-gradient(135deg,#161c28,#12161f);border:1px solid rgba(255,214,10,0.3)">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:gap:8px;margin-bottom:12px">
-          <div><h2 style="margin:0 0 4px;font-size:20px">🗳️ Sondagem: Quem vai vencer a corrida?</h2>
-          <span class="muted small">Vota no teu favorito e descobre o palpite da comunidade</span></div>
-          ${myVote ? `<span class="tag done">Voto Registado ✔</span>` : `<span class="tag wt">Votação Aberta</span>`}
-        </div>
-        <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px" id="poll-box">
-          ${contenders.map((r, i) => {
-            const isVoted = myVote === r.rider;
-            const pct = myVote ? (isVoted ? baseWeights[i] + 15 : Math.max(5, baseWeights[i] - 5)) : 0;
-            return `<div class="poll-card" data-rider="${esc(r.rider)}" style="${isVoted ? 'border-color:var(--accent);background:rgba(255,214,10,0.06)' : ''}">
-              <div style="display:flex;align-items:center;gap:10px">
-                ${avatar(r.rider, r.name)}
-                <div style="flex:1;min-width:0">
-                  <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(niceName(r.name))}</div>
-                  <div class="muted small">${flag(r.nation)} Favorito #${i + 1}</div>
-                </div>
-                ${myVote ? `<b style="font-size:15px;color:var(--accent)">${pct}%</b>` : `<button class="btn ghost" style="padding:4px 10px;font-size:12px">Votar</button>`}
-              </div>
-              <div class="poll-bar"><div class="poll-fill" style="width:${pct}%"></div></div>
-            </div>`;
-          }).join("")}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  function wirePoll(slug, year) {
-    const box = document.getElementById("poll-box");
-    if (!box) return;
-    box.addEventListener("click", e => {
-      const card = e.target.closest(".poll-card");
-      if (!card) return;
-      const pollKey = `sobrerodas:poll:${slug}:${year}`;
-      localStorage.setItem(pollKey, card.dataset.rider);
-      viewRace(slug, year);
-    });
-  }
-
+  // ------------------------------------------------------------ ⚔️ DUELO DE CICLISTAS
   async function viewVersus(slugA, slugB) {
     const idx = await get("riders/index.json");
     const list = ((idx && idx.riders) || []).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -500,59 +329,23 @@
     if (sB) sB.onchange = e => { location.hash = `#/duelo/${slugA}/${e.target.value}`; };
   }
 
+  // ------------------------------------------------------------ PÁGINA INICIAL
   async function viewHome() {
     const [live, cal, meta] = await Promise.all([get("live.json", { fresh: true }), get(`calendar/${YEAR}.json`), get("meta.json", { fresh: true })]);
     const races = (cal && cal.races) || [];
     const liveRaces = (live && live.date === TODAY && live.races) || [];
-    const next = races.filter(r => r.start >= TODAY).slice(0, 8);
+    const next = races.filter(r => r.start > TODAY).slice(0, 8);
     const done = races.filter(r => (r.end || r.start) < TODAY).slice(-8).reverse();
-    const bigSlugs = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
-    const bigRaces = bigSlugs.map(s => races.find(r => r.slug === s)).filter(Boolean);
-
-    const nextFeatured = next[0];
-    let daysUntil = "";
-    if (nextFeatured && nextFeatured.start) {
-      const diff = Math.ceil((new Date(nextFeatured.start) - new Date(TODAY)) / 86400000);
-      daysUntil = diff === 0 ? "HOJE" : diff === 1 ? "AMANHÃ" : `EM ${diff} DIAS`;
-    }
-
-    let html = `<section class="hero">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div class="kicker">ÉPOCA ${YEAR} · CIRCUITO MUNDIAL</div>
-        <button class="chip" id="btn-spotlight-hero" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2)">🔍 Pesquisa Rápida (Ctrl+K)</button>
+    const big = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
+    const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
+    let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
+      <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
+      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" href="#/calendario">Ver calendário</a>
+        <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
+        <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
-      <h1>O PELOTÃO, ETAPA A ETAPA</h1>
-      <p class="muted" style="max-width:650px;font-size:16px;line-height:1.5">
-        Acompanha classificações, altimetrias, perfis e o alinhamento das melhores equipas e ciclistas do mundo.
-      </p>
-      
-      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 24px">
-        <a class="btn" href="#/calendario">📅 Calendário</a>
-        <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111;box-shadow:0 4px 14px rgba(255,214,10,0.3)">⚔️ Duelo de Ciclistas</a>
-        <a class="btn ghost" href="#/ciclistas">🚴 Ciclistas</a>
-        <a class="btn ghost" href="#/equipas">🛡️ Equipas</a>
-        <a class="btn ghost" href="#/lendas">⭐ Lendas</a>
-      </div>
-
-      ${await topPeloton()}
-    </section>`;
-
-    if (nextFeatured) {
-      html += `<section class="section">
-        <div class="panel" style="background:linear-gradient(135deg, rgba(255, 214, 10, 0.12), rgba(20, 24, 34, 0.95));border:1px solid rgba(255, 214, 10, 0.35);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px">
-          <div>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-              <span class="tag live" style="background:var(--accent);color:#111">${daysUntil}</span>
-              <span class="muted small">${fmtRange(nextFeatured.start, nextFeatured.end)}</span>
-            </div>
-            <h2 style="margin:4px 0 8px;font-size:32px">${flag(nextFeatured.country)}${esc(cleanName(nextFeatured.name))} ${nextFeatured.year || YEAR}</h2>
-            <div class="row">${classTag(nextFeatured.class)}${nextFeatured.stage_race ? `<span class="tag">Por Etapas</span>` : `<span class="tag">Clássica de Um Dia</span>`}</div>
-          </div>
-          <a class="btn" href="#/prova/${esc(nextFeatured.slug)}/${nextFeatured.year || YEAR}" style="padding:12px 22px;font-size:15px">Ver Prova & Inscritos →</a>
-        </div>
-      </section>`;
-    }
-
+      ${await topPeloton()}</section>`;
     if (liveRaces.length) {
       html += `<section class="section"><div class="section-head"><h2>Hoje na estrada</h2></div><div class="grid">${liveRaces.map(l => `
         <a class="card live-box" href="${l.stage && l.stage !== "result" ? `#/etapa/${esc(l.race)}/${l.year}/${esc(l.stage)}` : `#/prova/${esc(l.race)}/${l.year}`}">
@@ -562,65 +355,11 @@
           ${l.leader && l.leader.name ? `<div class="small" style="margin-top:6px"><span class="jersey j-gc"></span>${esc(niceName(l.leader.name))}</div>` : ""}
         </a>`).join("")}</div></section>`;
     }
-
-    if (bigRaces.length) {
-      html += `<section class="section">
-        <div class="section-head">
-          <div>
-            <h2>Grandes Voltas & Monumentos</h2>
-            <span class="muted small">As provas mais prestigiadas da temporada</span>
-          </div>
-        </div>
-        <div class="grid">${bigRaces.map(grandTourCard).join("")}</div>
-      </section>`;
-    }
-
-    if (next.length > 1) {
-      html += `<section class="section">
-        <div class="section-head">
-          <h2>Próximas Provas</h2>
-          <a class="muted" href="#/calendario">Calendário completo →</a>
-        </div>
-        <div class="grid">${next.slice(1, 9).map(raceCard).join("")}</div>
-      </section>`;
-    }
-
-    if (done.length) {
-      html += `<section class="section">
-        <div class="section-head">
-          <h2>Últimos Vencedores</h2>
-        </div>
-        <div class="grid">${done.map(raceCard).join("")}</div>
-      </section>`;
-    }
-
+    if (bigRaces.length) html += `<section class="section"><div class="section-head"><h2>Grandes voltas</h2></div><div class="grid">${bigRaces.map(raceCard).join("")}</div></section>`;
+    if (next.length) html += `<section class="section"><div class="section-head"><h2>A seguir</h2><a class="muted" href="#/calendario">Calendário completo →</a></div><div class="grid">${next.map(raceCard).join("")}</div></section>`;
+    if (done.length) html += `<section class="section"><div class="section-head"><h2>Últimos resultados</h2></div><div class="grid">${done.map(raceCard).join("")}</div></section>`;
     app.innerHTML = html;
     setUpdated(meta);
-
-    const bHero = document.getElementById("btn-spotlight-hero");
-    if (bHero) bHero.onclick = openSpotlight;
-  }
-
-  function grandTourCard(r) {
-    const configs = {
-      "giro-d-italia": { border: "#ff4fa3", bg: "rgba(255, 79, 163, 0.08)", jersey: "Maglia Rosa", icon: "🌸" },
-      "tour-de-france": { border: "#ffd60a", bg: "rgba(255, 214, 10, 0.08)", jersey: "Maillot Jaune", icon: "🟡" },
-      "vuelta-a-espana": { border: "#ff4d4d", bg: "rgba(255, 77, 77, 0.08)", jersey: "La Roja", icon: "🔴" },
-      "volta-a-portugal": { border: "#2ecc71", bg: "rgba(46, 204, 113, 0.08)", jersey: "Camisola Amarela", icon: "🇵🇹" }
-    };
-    const cfg = configs[r.slug] || { border: "var(--line)", bg: "var(--panel)", jersey: "Líder", icon: "🏆" };
-
-    return `<a class="card" href="#/prova/${esc(r.slug)}/${r.year}" style="border-left: 4px solid ${cfg.border}; background: linear-gradient(135deg, ${cfg.bg}, var(--panel));">
-      <div class="row" style="justify-content:space-between">
-        <span class="date" style="color:${cfg.border}">${fmtRange(r.start, r.end)}</span>
-        <span class="tag" style="border-color:${cfg.border};color:${cfg.border}">${cfg.jersey}</span>
-      </div>
-      <div class="title" style="margin:8px 0">${flag(r.country)}${esc(cleanName(r.name))}</div>
-      <div class="row">${classTag(r.class)}<span class="tag">Por Etapas</span></div>
-      ${r.winner ? `<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;gap:6px;font-size:13px">
-        <span style="font-size:16px">${cfg.icon}</span> <span class="muted">Vencedor:</span> <b>${esc(niceName(r.winner.name))}</b>
-      </div>` : `<div class="muted small" style="margin-top:10px">Edição ${r.year} por disputar</div>`}
-    </a>`;
   }
 
   function raceCard(r) {
@@ -632,6 +371,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
+  // ------------------------------------------------------------ PÁGINA DA PROVA
   async function viewRace(slug, year) {
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
@@ -673,22 +413,8 @@
     } else {
       const info = race.info || {};
       const today = (race.date || race.start) === TODAY;
-      const hasResults = race.results && race.results.length;
-
-      html += factsHtml(info) + (today ? liveBox(race.live, "Corrida terminada") : "") + `<div id="profile"></div>`;
-
-      if (!hasResults) {
-        html += racePollHtml(race, slug, year);
-      }
-
-      if (hasResults) {
-        html += `<div class="two" style="margin-top:18px"><div><h2>Classificação Final</h2><div id="oneday-res">${classTable(race.results, "stage", 50)}</div></div>
-          <div><h2>Subidas e metas</h2><div class="panel">${climbsList(race.analysis || {})}</div>${race.story ? `<div class="section"><h2>Resumo</h2><p>${esc(race.story)}</p></div>` : ""}${videoLink(cleanName(race.name), year)}</div></div>`;
-      } else {
-        html += `<div class="section" style="margin-top:20px"><div class="panel" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div><h3 style="margin:0 0 4px">Transmissão e Acompanhamento</h3><span class="muted small">Em direto nos canais habituais (Eurosport / Max / RTP).</span></div>
-          <span class="tag wt" style="font-size:12px;padding:6px 12px">📡 Transmissão TV</span></div></div>`;
-      }
+      html += factsHtml(info) + (today ? liveBox(race.live, "Corrida terminada") : "") + `<div id="profile"></div><div class="two" style="margin-top:18px"><div><h2>Resultado</h2><div id="oneday-res">${classTable(race.results, "stage", 50)}</div></div>
+        <div><h2>Subidas e metas</h2><div class="panel">${climbsList(race.analysis || {})}</div>${race.story ? `<div class="section"><h2>Resumo</h2><p>${esc(race.story)}</p></div>` : ""}${videoLink(cleanName(race.name), year)}</div></div>`;
     }
 
     if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist);
@@ -703,8 +429,6 @@
       profileChart(document.getElementById("profile"), race);
       if (race.results && race.results.length) {
         wireMore(document.getElementById("oneday-res"), race.results, "stage");
-      } else {
-        wirePoll(slug, year);
       }
       if ((race.date || race.start) === TODAY) refreshLater(() => { cache.delete(`races/${slug}/${year}.json`); viewRace(slug, year); });
     }
@@ -808,8 +532,6 @@
     items.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
     return items.length ? items.map(i => i.html).join("") : `<div class="empty">Sem dados de subidas.</div>`;
   }
-
-  function intermediateBlock(list) { return ""; }
 
   async function viewStage(slug, year, id) {
     if (id === "result") return viewRace(slug, year);
