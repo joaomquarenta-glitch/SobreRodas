@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 2: Radar de Habilidades & Troféus) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 3: Liga de Palpites & Gamificação) */
 (() => {
   "use strict";
 
@@ -34,6 +34,15 @@
       .trophy-badge .icon { font-size: 24px; margin-bottom: 4px; display: block; }
       .trophy-badge .count { font-family: var(--head); font-size: 20px; font-weight: 800; color: var(--accent); }
       .trophy-badge .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+      /* Estilos dos Palpites (Gamificação) */
+      .predict-box { background: linear-gradient(135deg, #182030, #121620); border: 1px solid rgba(255, 214, 10, 0.35); border-radius: 16px; padding: 22px; margin: 20px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+      .predict-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
+      .predict-slot { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+      .predict-slot.gold { border-color: #ffd60a; }
+      .predict-slot.silver { border-color: #cbd5e1; }
+      .predict-slot.bronze { border-color: #d97706; }
+      .predict-slot select { width: 100%; }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
@@ -220,6 +229,7 @@
       `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira no pelotão mundial`,
       `🏆 <b>RANKING PCS:</b> Tadej Pogačar lidera a época com mais de 11.000 pontos`,
       `⚔️ <b>NOVO:</b> Experimenta o comparador no menu Duelo de Ciclistas!`,
+      `🎮 <b>PALPITES:</b> Escolhe o teu pódio nas provas e ganha pontos`,
       `📡 <b>TRANSMISSÕES:</b> Acompanha as clássicas nos canais Eurosport e Max`,
       `⭐ <b>FAVORITOS:</b> Carrega na estrela para seguir ciclistas`
     ];
@@ -241,7 +251,6 @@
     const cx = 160, cy = 135, R = 85;
     const maxSpec = Math.max(1, maxVal, ...Object.values(specialties || {}));
 
-    // Grelha concêntrica (3 níveis)
     let rings = "";
     [0.35, 0.70, 1.0].forEach(level => {
       const pts = keys.map((_, i) => {
@@ -251,7 +260,6 @@
       rings += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>`;
     });
 
-    // Eixos radiais e etiquetas
     let axes = "", labels = "";
     keys.forEach((item, i) => {
       const angle = (i * Math.PI / 3) - (Math.PI / 2);
@@ -265,7 +273,6 @@
       labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="#a6b1c2" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">${item.icon} ${item.label} <tspan fill="var(--accent)" font-weight="800">(${val})</tspan></text>`;
     });
 
-    // Polígono de dados do ciclista
     const dataPoints = keys.map((item, i) => {
       const angle = (i * Math.PI / 3) - (Math.PI / 2);
       const val = (specialties && specialties[item.k]) || 0;
@@ -290,7 +297,6 @@
     </div>`;
   }
 
-  // Galeria de troféus e palmarés
   function trophiesHtml(r) {
     const stats = r.stats || {};
     const wins = (stats.wins && stats.wins.value) || 0;
@@ -304,6 +310,124 @@
       <div class="trophy-badge"><span class="icon">🪨</span><div class="count">${classics}</div><div class="lbl">Monumentos</div></div>
       <div class="trophy-badge"><span class="icon">🌈</span><div class="count">${champs}</div><div class="lbl">Campeonatos</div></div>
     </div>`;
+  }
+
+  // ------------------------------------------------------------ 🎮 FASE 3: LIGA DE PALPITES (PODIUM PREDICTION)
+  function predictionBoxHtml(race, slug, year) {
+    const pickKey = `sobrerodas:picks:${slug}:${year}`;
+    let myPicks = { p1: "", p2: "", p3: "" };
+    try { myPicks = JSON.parse(localStorage.getItem(pickKey)) || myPicks; } catch(e) {}
+
+    // Lista de ciclistas inscritos para escolher
+    let ridersList = [];
+    if (race.startlist && race.startlist.length) {
+      ridersList = race.startlist.flatMap(t => t.riders || []).filter(r => r && r.rider);
+    }
+    if (!ridersList.length && race.results && race.results.length) {
+      ridersList = race.results.slice(0, 30).map(r => ({ rider: r.rider, name: r.name, nation: r.nation }));
+    }
+    if (!ridersList.length) return "";
+
+    const hasResults = race.results && race.results.length >= 3;
+    let scoreHtml = "";
+
+    // Se já terminou, calcula a pontuação oficial do palpite
+    if (hasResults && (myPicks.p1 || myPicks.p2 || myPicks.p3)) {
+      const top3 = race.results.slice(0, 3).map(r => r.rider);
+      let pts = 0;
+      let breakdown = [];
+
+      if (myPicks.p1) {
+        if (myPicks.p1 === top3[0]) { pts += 25; breakdown.push("🥇 Acertaste no Vencedor (+25 pts)"); }
+        else if (top3.includes(myPicks.p1)) { pts += 5; breakdown.push("🥈 No Pódio (+5 pts)"); }
+      }
+      if (myPicks.p2) {
+        if (myPicks.p2 === top3[1]) { pts += 15; breakdown.push("🥈 Acertaste no 2.º Lugar (+15 pts)"); }
+        else if (top3.includes(myPicks.p2)) { pts += 5; breakdown.push("🥉 No Pódio (+5 pts)"); }
+      }
+      if (myPicks.p3) {
+        if (myPicks.p3 === top3[2]) { pts += 10; breakdown.push("🥉 Acertaste no 3.º Lugar (+10 pts)"); }
+        else if (top3.includes(myPicks.p3)) { pts += 5; breakdown.push("🏁 No Pódio (+5 pts)"); }
+      }
+
+      scoreHtml = `<div style="background:rgba(255,214,10,0.12);border:1px solid var(--accent);border-radius:12px;padding:14px;margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b>Pontuação do teu Palpite:</b>
+          <span style="font-family:var(--head);font-size:26px;font-weight:900;color:var(--accent)">+${pts} PTS</span>
+        </div>
+        ${breakdown.length ? `<div class="small muted" style="margin-top:6px">${breakdown.join(" · ")}</div>` : `<div class="small muted" style="margin-top:4px">Não acertaste em nenhum lugar do pódio desta vez.</div>`}
+      </div>`;
+    }
+
+    const isLocked = Boolean(myPicks.p1 && myPicks.p2 && myPicks.p3);
+
+    return `<div class="predict-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2 style="margin:0 0 4px;font-size:22px">🎮 Liga de Palpites: Escolhe o teu Pódio</h2>
+          <span class="muted small">Aposta nos 3 primeiros lugares antes da partida e soma pontos!</span>
+        </div>
+        ${hasResults ? `<span class="tag done">Corrida Terminada</span>` : isLocked ? `<span class="tag done">🔒 Palpite Gravado</span>` : `<span class="tag wt">Palpites Abertos</span>`}
+      </div>
+
+      <div class="predict-slots" id="predict-form">
+        <div class="predict-slot gold">
+          <b style="color:#ffd60a">🥇 1.º Lugar (Vencedor)</b>
+          <select id="pick-1" ${hasResults ? "disabled" : ""}>
+            <option value="">-- Escolhe o Vencedor --</option>
+            ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p1 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="predict-slot silver">
+          <b style="color:#cbd5e1">🥈 2.º Lugar</b>
+          <select id="pick-2" ${hasResults ? "disabled" : ""}>
+            <option value="">-- Escolhe o 2.º --</option>
+            ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p2 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="predict-slot bronze">
+          <b style="color:#d97706">🥉 3.º Lugar</b>
+          <select id="pick-3" ${hasResults ? "disabled" : ""}>
+            <option value="">-- Escolhe o 3.º --</option>
+            ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p3 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+
+      ${!hasResults ? `
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+          <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
+          <span class="muted small" id="pick-feedback"></span>
+        </div>` : ""}
+
+      ${scoreHtml}
+    </div>`;
+  }
+
+  function wirePredictions(slug, year) {
+    const btn = document.getElementById("btn-save-picks");
+    if (!btn) return;
+    btn.onclick = () => {
+      const p1 = document.getElementById("pick-1").value;
+      const p2 = document.getElementById("pick-2").value;
+      const p3 = document.getElementById("pick-3").value;
+
+      if (!p1 || !p2 || !p3) {
+        document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar!</span>`;
+        return;
+      }
+      if (p1 === p2 || p1 === p3 || p2 === p3) {
+        document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Não podes escolher o mesmo ciclista em mais do que um lugar!</span>`;
+        return;
+      }
+
+      const pickKey = `sobrerodas:picks:${slug}:${year}`;
+      localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
+      document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso!</span>`;
+      setTimeout(() => viewRace(slug, year), 600);
+    };
   }
 
   // ------------------------------------------------------------ ⚔️ DUELO DE CICLISTAS
@@ -534,7 +658,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA (COM GUIA TV)
+  // ------------------------------------------------------------ PÁGINA DA PROVA (COM PALPITES & GUIA TV)
   async function viewRace(slug, year) {
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
@@ -561,6 +685,7 @@
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
 
+    // BLOCO DE GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -573,6 +698,9 @@
         <span class="tag wt" style="font-size:13px;padding:6px 14px">${tvChannel}</span>
       </div>
     </div>`;
+
+    // NOVIDADE FASE 3: Caixa da Liga de Palpites
+    html += predictionBoxHtml(race, slug, year);
 
     if (race.stage_race) {
       const stages = race.stages || [];
@@ -604,6 +732,9 @@
     const rYear = document.getElementById("race-year");
     if (rYear) rYear.onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     
+    // Ativar lógica dos palpites
+    wirePredictions(slug, year);
+
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
     else {
       profileChart(document.getElementById("profile"), race);
@@ -830,7 +961,6 @@
     render();
   }
 
-  // ------------------------------------------------------------ FICHA DO CICLISTA (COM RADAR & TROFÉUS)
   const SPEC = { gc: "Geral", climber: "Montanha", tt: "Contrarrelógio", sprint: "Sprint", oneday: "Clássicas", hills: "Colinas" };
   async function viewRider(slug) {
     const r = await get(`riders/${slug}.json`);
@@ -849,12 +979,9 @@
       <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`]]
         .filter(x => x[1] != null && x[1] !== "").map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`;
 
-    // NOVIDADE: Galeria de Troféus
     html += `<div class="section"><div class="section-head"><h2>🏆 Conquistas & Grandes Voltas</h2></div>${trophiesHtml(r)}</div>`;
-
     html += `<div class="two" style="margin-top:20px"><div>`;
 
-    // NOVIDADE: Radar de Habilidades Hexagonal em SVG
     if (Object.keys(r.specialties || {}).length) {
       html += `<div class="section"><div class="section-head"><h2>📊 Perfil de Atributos (Radar)</h2></div>${radarChartSvg(r.specialties)}</div>`;
     }
