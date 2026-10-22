@@ -1,6 +1,19 @@
-/* SobreRodas — site de página única com funcionalidades dinâmicas e interativas. */
+/* SobreRodas — com proteções de carregamento e diagnóstico visual */
 (() => {
   "use strict";
+
+  // DIAGNÓSTICO VISUAL DE ERROS NO ECRÃ
+  window.onerror = function(msg, url, line) {
+    const el = document.getElementById("app");
+    if (el) {
+      el.innerHTML = `<div style="padding:24px;background:#2d1414;color:#ff8888;border:1px solid #ff4d4d;border-radius:12px;margin:20px;font-family:sans-serif">
+        <h3 style="margin:0 0 8px;color:#fff">⚠️ Ocorreu um erro no carregamento</h3>
+        <p style="margin:4px 0"><b>Mensagem:</b> ${msg}</p>
+        <p style="margin:4px 0;font-size:12px;opacity:0.8">Ficheiro: ${url} (Linha ${line})</p>
+      </div>`;
+    }
+  };
+
   let SOURCES = [].concat(window.SOBRERODAS_DATA || "data/");
   const PCS = "https://www.procyclingstats.com/";
   const app = document.getElementById("app");
@@ -8,38 +21,50 @@
   const TODAY = new Date().toISOString().slice(0, 10);
   const YEAR = Number(TODAY.slice(0, 4));
 
-  // Injetar estilos dinâmicos para a Pesquisa Modal, Ticker e Votação
-  const dynamicStyles = document.createElement("style");
-  dynamicStyles.textContent = `
-    .ticker-wrap { width: 100%; background: #11151f; border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; padding: 7px 0; font-size: 13px; }
-    .ticker-move { display: inline-block; white-space: nowrap; animation: ticker 40s linear infinite; }
-    .ticker-move:hover { animation-play-state: paused; }
-    .ticker-item { display: inline-block; padding: 0 24px; color: var(--text); }
-    .ticker-item b { color: var(--accent); }
-    @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+  // Injetar estilos dinâmicos
+  try {
+    const dynamicStyles = document.createElement("style");
+    dynamicStyles.textContent = `
+      .ticker-wrap { width: 100%; background: #11151f; border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; padding: 7px 0; font-size: 13px; }
+      .ticker-move { display: inline-block; white-space: nowrap; animation: ticker 40s linear infinite; }
+      .ticker-move:hover { animation-play-state: paused; }
+      .ticker-item { display: inline-block; padding: 0 24px; color: var(--text); }
+      .ticker-item b { color: var(--accent); }
+      @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-    .spotlight-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh; }
-    .spotlight-modal { width: 92%; max-width: 620px; background: #161b26; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden; animation: popIn .2s ease-out; }
-    @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-    .spotlight-input-wrap { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); gap: 12px; }
-    .spotlight-input { width: 100%; background: none; border: none; outline: none; color: #fff; font-size: 17px; font-family: inherit; }
-    .spotlight-results { max-height: 380px; overflow-y: auto; padding: 10px; }
-    .spotlight-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; color: var(--text); transition: background .15s; cursor: pointer; text-decoration: none; }
-    .spotlight-item:hover { background: rgba(255,255,255,0.06); color: var(--accent); }
+      .spotlight-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh; }
+      .spotlight-modal { width: 92%; max-width: 620px; background: #161b26; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden; animation: popIn .2s ease-out; }
+      @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+      .spotlight-input-wrap { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); gap: 12px; }
+      .spotlight-input { width: 100%; background: none; border: none; outline: none; color: #fff; font-size: 17px; font-family: inherit; }
+      .spotlight-results { max-height: 380px; overflow-y: auto; padding: 10px; }
+      .spotlight-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; color: var(--text); transition: background .15s; cursor: pointer; text-decoration: none; }
+      .spotlight-item:hover { background: rgba(255,255,255,0.06); color: var(--accent); }
 
-    .poll-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 8px 0; cursor: pointer; transition: all .2s; }
-    .poll-card:hover { border-color: var(--accent); transform: translateX(3px); }
-    .poll-bar { height: 7px; background: rgba(255,255,255,0.08); border-radius: 7px; overflow: hidden; margin-top: 8px; }
-    .poll-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-  `;
-  document.head.appendChild(dynamicStyles);
+      .poll-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 8px 0; cursor: pointer; transition: all .2s; }
+      .poll-card:hover { border-color: var(--accent); transform: translateX(3px); }
+      .poll-bar { height: 7px; background: rgba(255,255,255,0.08); border-radius: 7px; overflow: hidden; margin-top: 8px; }
+      .poll-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    `;
+    document.head.appendChild(dynamicStyles);
+  } catch(e) {}
 
-  // ------------------------------------------------------------ utilitários
+  // Carregamento seguro com limite de 6 segundos (para nunca congelar)
   async function load(path, fresh) {
     for (const src of SOURCES) {
       try {
-        const r = await fetch(src + path + (fresh ? `?t=${Date.now()}` : ""), { cache: fresh ? "no-store" : "default" });
-        if (r.ok) { if (SOURCES[0] !== src) SOURCES = [src, ...SOURCES.filter(x => x !== src)]; return await r.json(); }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const r = await fetch(src + path + (fresh ? `?t=${Date.now()}` : ""), { 
+          cache: fresh ? "no-store" : "default",
+          signal: controller.signal 
+        });
+        clearTimeout(timeoutId);
+
+        if (r.ok) { 
+          if (SOURCES[0] !== src) SOURCES = [src, ...SOURCES.filter(x => x !== src)]; 
+          return await r.json(); 
+        }
         if (r.status === 404 && src === SOURCES[0] && path !== "meta.json") {
           const m = await fetch(src + "meta.json", { cache: "default" }).catch(() => null);
           if (m && m.ok) return null;
@@ -49,12 +74,14 @@
     }
     return null;
   }
+
   async function get(path, { fresh = false } = {}) {
     if (!fresh && cache.has(path)) return cache.get(path);
     const p = load(path, fresh);
     if (!fresh) cache.set(path, p);
     return p;
   }
+
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
   const flag = cc => {
@@ -68,6 +95,7 @@
   const fmtDate = iso => (iso ? `${Number(iso.slice(8, 10))} ${MESES[Number(iso.slice(5, 7)) - 1]}` : "");
   const fmtRange = (a, b) => (!b || a === b ? fmtDate(a) : `${fmtDate(a)} – ${fmtDate(b)}`);
   const titleCase = w => w.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+  
   function niceName(n) {
     if (!n) return "";
     const parts = n.split(" ");
@@ -76,6 +104,7 @@
     if (!sur.length || !first.length) return n;
     return `${first.join(" ")} ${titleCase(sur.join(" "))}`;
   }
+
   function surname(n) {
     if (!n) return "";
     const parts = n.split(" ");
@@ -83,18 +112,22 @@
     if (sur.length && sur.length < parts.length) return titleCase(sur.join(" "));
     return parts.length > 1 ? parts.slice(1).join(" ") : n;
   }
+
   const riderLink = (slug, name, nation) => `${flag(nation)}<a href="#/ciclista/${esc(slug)}">${esc(niceName(name))}</a>`;
   const teamLink = (slug, name) => (slug ? `<a class="team-link" href="#/equipa/${esc(slug)}">${shirt(slug)}${esc(name || slug)}</a>` : esc(name || ""));
   const raceLink = (slug, year, label) => `<a href="#/prova/${esc(slug)}/${year}">${esc(label)}</a>`;
+  
   const status = (r) => {
     if ((r.end || r.start) === TODAY && (r.finished || (r.live && r.live.status && r.live.status.status === "finished"))) return "done";
     return r.start <= TODAY && TODAY <= (r.end || r.start) ? "live" : (r.end || r.start) < TODAY ? "done" : "next";
   };
+
   const fmtTime = (row, i) => {
     if (!row.time) return "";
     if (i === 0) return row.time;
     return row.time.startsWith("+") ? row.time : `+${row.time}`;
   };
+
   const PARCOURS = { 1: "Plano", 2: "Ondulado, final plano", 3: "Ondulado, chegada em subida", 4: "Montanha, final plano", 5: "Montanha, chegada em alto" };
   const parcoursIcon = c => {
     const shapes = {
@@ -103,6 +136,7 @@
     };
     return `<svg class="ptype" viewBox="0 0 44 22"><path d="${shapes[c] || shapes[1]}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
   };
+
   const isWT = c => /UWT|WC/.test(c || "");
   const classTag = c => `<span class="tag ${isWT(c) ? "wt" : ""}">${esc(c)}</span>`;
   const FAVS_KEY = "sobrerodas:favs";
@@ -116,8 +150,10 @@
       return this.has(item.slug);
     },
   };
+
   const starBtn = (slug, name) =>
     `<button class="star ${favs.has(slug) ? "on" : ""}" data-fav="${esc(slug)}" data-name="${esc(name)}">${favs.has(slug) ? "★ A seguir" : "☆ Seguir"}</button>`;
+
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-fav]");
     if (!b) return;
@@ -127,32 +163,38 @@
   });
 
   function tabs(container, items, render) {
+    if (!container) return;
     const id = "t" + Math.random().toString(36).slice(2, 8);
     container.innerHTML = `<div class="tabs" id="${id}">${items.map((t, i) =>
       `<button data-k="${esc(t.key)}" class="${i === 0 ? "on" : ""}">${t.dot ? `<span class="jersey ${t.dot}"></span>` : ""}${esc(t.label)}</button>`).join("")}</div><div class="tab-body"></div>`;
     const body = container.querySelector(".tab-body");
-    const show = k => { body.innerHTML = render(k); };
-    container.querySelector(".tabs").addEventListener("click", e => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      container.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
-      show(b.dataset.k);
-    });
+    const show = k => { if (body) body.innerHTML = render(k); };
+    const tabsBar = container.querySelector(".tabs");
+    if (tabsBar) {
+      tabsBar.addEventListener("click", e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        container.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+        show(b.dataset.k);
+      });
+    }
     if (items.length) show(items[0].key);
   }
 
-  // ------------------------------------------------------------ tabelas de classificação
   const CLS = [
     { key: "stage", label: "Etapa" }, { key: "gc", label: "Geral", dot: "j-gc" }, { key: "points", label: "Pontos", dot: "j-points" },
     { key: "kom", label: "Montanha", dot: "j-kom" }, { key: "youth", label: "Juventude", dot: "j-youth" }, { key: "teams", label: "Equipas", dot: "j-teams" },
   ];
+
   const initials = n => esc(String(n || "?").split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase());
   const avatar = (slug, name, cls = "") => `<span class="avatar ${cls}" data-i="${initials(niceName(name || ""))}"><img loading="lazy" src="${esc(SOURCES[0])}photos/${esc(slug)}.jpg" data-n="0" data-f="photos/${esc(slug)}.jpg" alt="" onerror="SR_photoError(this)"></span>`;
   const shirt = (slug, cls = "shirt") => slug ? `<img class="${cls}" loading="lazy" src="${esc(SOURCES[0])}shirts/${esc(slug)}.png" data-n="0" data-f="shirts/${esc(slug)}.png" alt="" onerror="SR_photoError(this)">` : "";
+
   window.SR_photoError = img => {
     const n = Number(img.dataset.n) + 1;
     if (n < SOURCES.length) { img.dataset.n = n; img.src = SOURCES[n] + img.dataset.f; } else img.remove();
   };
+
   const LIVE_STATUS = { prerace: "antes da partida", racing: "em corrida", finished: "terminada" };
   const cleanName = n => String(n || "").replace(/^\d{4}\s*»\s*/, "").replace(/\s*\((?:1|2)\.[A-Za-z]+\)$/, "");
 
@@ -172,7 +214,9 @@
     const more = limit && rows.length > limit ? `<button class="chip more-btn" data-kind="${esc(kind)}">Ver todos (${rows.length})</button>` : "";
     return `<div class="tbl-wrap"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${more}`;
   }
+
   function classificationTabs(el, cls, firstLabel = "Etapa") {
+    if (!el) return;
     const items = CLS.filter(c => cls && cls[c.key] && cls[c.key].length).map(c => (c.key === "stage" ? { ...c, label: firstLabel } : c));
     if (!items.length) { el.innerHTML = `<div class="empty">Ainda sem resultados.</div>`; return; }
     tabs(el, items, k => classTable(cls[k], k, 25));
@@ -182,7 +226,6 @@
     };
   }
 
-  // ------------------------------------------------------------ TICKER DE NOTÍCIAS AO VIVO
   function renderTicker() {
     let wrap = document.getElementById("sobrerodas-ticker");
     if (!wrap) {
@@ -190,25 +233,21 @@
       wrap.id = "sobrerodas-ticker";
       wrap.className = "ticker-wrap";
       const topbar = document.querySelector(".topbar");
-      if (topbar && topbar.parentNode) {
-        topbar.parentNode.insertBefore(wrap, topbar.nextSibling);
-      } else {
-        document.body.prepend(wrap);
-      }
+      if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(wrap, topbar.nextSibling);
+      else document.body.prepend(wrap);
     }
     const news = [
       `⚡ <b>PRÓXIMA PROVA:</b> Veneto Classic em contagem decrescente`,
-      `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira no pelotão internacional`,
-      `🏆 <b>RANKING PCS:</b> Tadej Pogačar lidera o pelotão mundial com mais de 11.000 pontos`,
+      `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira no pelotão mundial`,
+      `🏆 <b>RANKING PCS:</b> Tadej Pogačar lidera a época com mais de 11.000 pontos`,
       `⚔️ <b>NOVO:</b> Experimenta o comparador no menu Duelo de Ciclistas!`,
       `📡 <b>TRANSMISSÕES:</b> Acompanha as clássicas nos canais Eurosport e Max`,
-      `⭐ <b>FAVORITOS:</b> Carrega na estrela para seguir os teus ciclistas favoritos`
+      `⭐ <b>FAVORITOS:</b> Carrega na estrela para seguir ciclistas`
     ];
     const content = news.map(n => `<span class="ticker-item">${n}</span>`).join(" · ");
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  // ------------------------------------------------------------ PESQUISA GLOBAL SPOTLIGHT (Ctrl + K)
   let spotlightData = null;
   async function openSpotlight() {
     let modal = document.getElementById("spotlight");
@@ -287,7 +326,6 @@
     }
   });
 
-  // ------------------------------------------------------------ VOTAÇÃO DE FAVORITOS NA PROVA
   function racePollHtml(race, slug, year) {
     const pollKey = `sobrerodas:poll:${slug}:${year}`;
     const myVote = localStorage.getItem(pollKey);
@@ -301,7 +339,7 @@
     const baseWeights = [42, 28, 18, 12];
     return `<div class="section">
       <div class="panel" style="background:linear-gradient(135deg,#161c28,#12161f);border:1px solid rgba(255,214,10,0.3)">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:gap:8px;margin-bottom:12px">
           <div><h2 style="margin:0 0 4px;font-size:20px">🗳️ Sondagem: Quem vai vencer a corrida?</h2>
           <span class="muted small">Vota no teu favorito e descobre o palpite da comunidade</span></div>
           ${myVote ? `<span class="tag done">Voto Registado ✔</span>` : `<span class="tag wt">Votação Aberta</span>`}
@@ -339,7 +377,6 @@
     });
   }
 
-  // ------------------------------------------------------------ DUELO DE CICLISTAS
   async function viewVersus(slugA, slugB) {
     const idx = await get("riders/index.json");
     const list = ((idx && idx.riders) || []).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -456,11 +493,12 @@
 
     app.innerHTML = html;
 
-    document.getElementById("sel-rider-a").onchange = e => { location.hash = `#/duelo/${e.target.value}/${slugB}`; };
-    document.getElementById("sel-rider-b").onchange = e => { location.hash = `#/duelo/${slugA}/${e.target.value}`; };
+    const sA = document.getElementById("sel-rider-a");
+    const sB = document.getElementById("sel-rider-b");
+    if (sA) sA.onchange = e => { location.hash = `#/duelo/${e.target.value}/${slugB}`; };
+    if (sB) sB.onchange = e => { location.hash = `#/duelo/${slugA}/${e.target.value}`; };
   }
 
-  // ------------------------------------------------------------ PÁGINA INICIAL
   async function viewHome() {
     const [live, cal, meta] = await Promise.all([get("live.json", { fresh: true }), get(`calendar/${YEAR}.json`), get("meta.json", { fresh: true })]);
     const races = (cal && cal.races) || [];
@@ -593,7 +631,6 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA
   async function viewRace(slug, year) {
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
@@ -608,7 +645,7 @@
     let raceTop = rowsToRiders(race.stage_race ? (race.final || {}).gc : race.results);
     let pelTitle = race.stage_race ? (race.finished || st === "done" ? "Classificação final" : "Classificação geral") : "Resultado";
     if (!raceTop.length && race.startlist && race.startlist.length) {
-      raceTop = race.startlist.flatMap(t => (t.riders || []).slice(0, 1)).slice(0, 10).map(r => ({ slug: r.rider, name: r.name, team: r.team }));
+      raceTop = race.startlist.flatMap(t => (t.riders || []).slice(0, 1)).slice(0, 10).map(r => ({ slug: r.rider, name: r.name, team: t.team }));
       pelTitle = "Pelotão à partida";
     }
 
@@ -656,7 +693,9 @@
     if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist);
     html += historyHtml(hist, race.stage_race);
     app.innerHTML = html;
-    document.getElementById("race-year").onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
+    
+    const rYear = document.getElementById("race-year");
+    if (rYear) rYear.onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
     else {
@@ -670,7 +709,7 @@
     }
 
     const ht = document.getElementById("hist-tabs");
-    if (ht) {
+    if (ht && hist) {
       const keys = [["gc", "Geral", "j-gc"], ["points", "Pontos", "j-points"], ["kom", "Montanha", "j-kom"], ["youth", "Juventude", "j-youth"], ["result", "Pódios", ""]]
         .filter(([k]) => hist[k] && hist[k].length).map(([key, label, dot]) => ({ key, label, dot }));
       tabs(ht, keys, k => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ano</th><th>1.º</th><th>2.º</th><th>3.º</th></tr></thead><tbody>${hist[k].map(h => ({ ...h, podium: h.podium || (h.year === year ? podiumOf(race, k) : []) })).map(h =>
@@ -682,21 +721,24 @@
     const rows = k === "result" ? race.results : (race.final || {})[k];
     return (rows || []).filter(r => /^\d+$/.test(r.rank)).slice(0, 3).map(r => ({ slug: r.rider, name: r.name, nation: r.nation }));
   }
+
   function factsHtml(info) {
+    if (!info) return "";
     const f = [["Data", fmtDate(info.date)], ["Distância", info.distance_km && `${info.distance_km} km`], ["Desnível", info.vertical_m && `${info.vertical_m} m`],
-      ["Partida", info.departure], ["Chegada", info.arrival], ["Hora", info.start_time && !info.start_time.startsWith("00:00") && info.start_time.slice(0, 5)],
+      ["Partida", info.departure], ["Chegada", info.arrival], ["Hora", info.start_time && !String(info.start_time).startsWith("00:00") && String(info.start_time).slice(0, 5)],
       ["Percurso", PARCOURS[info.parcours_code] || info.parcours], ["Média do vencedor", info.avg_speed ? `${info.avg_speed} km/h` : ""],
       ["Final", info.gradient_final_km != null ? `último km a ${info.gradient_final_km}%` : ""], ["Como ganhou", info.won_how], ["Temperatura", info.avg_temp_c ? `${info.avg_temp_c} °C` : ""]];
     return `<div class="facts">${f.filter(x => x[1]).map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v" style="font-size:${String(v).length > 14 ? 16 : 22}px">${esc(v)}</div></div>`).join("")}</div>`;
   }
+
   const videoLink = (name, year, stage) => `<p><a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} ${year} ${stage ? `stage ${stage} ` : ""}highlights`)}">▶ Ver resumo em vídeo</a></p>`;
 
   function startlistHtml(sl) {
-    const n = sl.reduce((s, t) => s + t.riders.length, 0), out = sl.reduce((s, t) => s + t.riders.filter(r => r.status).length, 0);
+    const n = sl.reduce((s, t) => s + (t.riders || []).length, 0), out = sl.reduce((s, t) => s + (t.riders || []).filter(r => r.status).length, 0);
     return `<div class="section"><div class="section-head"><h2>Inscritos / Startlist</h2><span class="muted small">${sl.length} equipas · ${n} ciclistas${out ? ` · ${out} desistências` : ""}</span></div>
       <div class="grid" style="margin-top:14px">${sl.map(t => `<div class="card">
         <div class="row" style="border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px"><b>${teamLink(t.team, t.name)}</b></div>
-        <div style="display:flex;flex-direction:column;gap:8px">${t.riders.map(r => `
+        <div style="display:flex;flex-direction:column;gap:8px">${(t.riders || []).map(r => `
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;${r.status ? "opacity:.5" : ""}">
             <span class="muted" style="min-width:22px;font-weight:700;font-size:11px">${r.bib ?? ""}</span>
             ${avatar(r.rider, r.name)}
@@ -704,18 +746,19 @@
             ${starBtn(r.rider, r.name)}
           </div>`).join("")}</div></div>`).join("")}</div></div>`;
   }
+
   function historyHtml(hist, stageRace) {
     if (!hist) return "";
     return `<div class="section"><h2>Histórico</h2><div class="muted small" style="margin-bottom:8px">Pódios das edições anteriores</div><div id="hist-tabs"></div></div>`;
   }
 
-  // ------------------------------------------------------------ PERFIL E GRÁFICO
   const gradColor = g => (g < 0 ? "#3b4252" : g < 3 ? "#2ecc71" : g < 6 ? "#f1c40f" : g < 9 ? "#e67e22" : g < 12 ? "#e74c3c" : "#8e1b1b");
   function profileChart(el, stage) {
-    const prof = stage.profile, an = stage.analysis || {};
+    if (!el) return;
+    const prof = (stage && stage.profile) || {}, an = (stage && stage.analysis) || {};
     if (!prof || !prof.points || prof.points.length < 2) {
-      const img = (stage.profile_images || [])[0];
-      el.innerHTML = img ? `<div class="profile"><img src="${esc(img)}" alt="Perfil da etapa" referrerpolicy="no-referrer" style="width:100%;border-radius:10px"></div>`
+      const img = ((stage && stage.profile_images) || [])[0];
+      el.innerHTML = img ? `<div class="profile"><img src="${esc(img)}" alt="Perfil" referrerpolicy="no-referrer" style="width:100%;border-radius:10px"></div>`
         : `<div class="empty">Perfil altimétrico em preparação.</div>`;
       return;
     }
@@ -746,89 +789,46 @@
       marks += `<g><line x1="${x(km)}" x2="${x(km)}" y1="${ey}" y2="${T - 2}" stroke="#ffffff55" stroke-dasharray="2 3"/>
         <rect x="${x(km) - 13}" y="${T - 30}" width="26" height="20" rx="5" fill="#fff"/><text x="${x(km)}" y="${T - 15}" fill="#e63946" font-size="12" font-weight="800" text-anchor="middle">${esc(c.category || "▲")}</text></g>`;
     });
-    (an.sprints || []).forEach(s => {
-      const km = s.km * scale;
-      marks += `<g><line x1="${x(km)}" x2="${x(km)}" y1="${y(s.elevation_m ?? lo)}" y2="${T - 2}" stroke="#2ecc7188" stroke-dasharray="2 3"/>
-        <rect x="${x(km) - 11}" y="${T - 30}" width="22" height="20" rx="5" fill="#2ecc71"/><text x="${x(km)}" y="${T - 15}" fill="#052" font-size="12" font-weight="800" text-anchor="middle">S</text></g>`;
-    });
     marks += `<text x="${x(maxKm) - 2}" y="${y(pts[pts.length - 1][1]) - 8}" fill="#fff" font-size="16" text-anchor="end">🏁</text>`;
-    el.innerHTML = `<div class="profile"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil altimétrico">${axes}${polys}<polyline points="${line}" fill="none" stroke="#fff" stroke-width="1.6"/>${marks}
-      <line class="cursor" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="#fff" stroke-width="1" visibility="hidden"/></svg><div class="tip"></div></div>
-      <div class="legend"><span><i style="background:#3b4252"></i>descida</span><span><i style="background:#2ecc71"></i>0–3%</span><span><i style="background:#f1c40f"></i>3–6%</span><span><i style="background:#e67e22"></i>6–9%</span><span><i style="background:#e74c3c"></i>9–12%</span><span><i style="background:#8e1b1b"></i>+12%</span><span>▲ prémio de montanha · S meta volante</span></div>`;
-    const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), cur = el.querySelector(".cursor");
-    const ele = km => { for (let i = 0; i < pts.length - 1; i++) if (pts[i + 1][0] >= km) { const [a, ea] = pts[i], [b, eb] = pts[i + 1]; return ea + (eb - ea) * ((km - a) / ((b - a) || 1)); } return pts[pts.length - 1][1]; };
-    svg.addEventListener("mousemove", e => {
-      const r = svg.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width * W;
-      const km = Math.max(0, Math.min(maxKm, (px - L) / (W - L - R) * maxKm));
-      cur.setAttribute("x1", x(km)); cur.setAttribute("x2", x(km)); cur.setAttribute("visibility", "visible");
-      tip.style.display = "block";
-      tip.style.left = `${(x(km) / W) * r.width + 6}px`; tip.style.top = `${(y(ele(km)) / H) * r.height + 10}px`;
-      tip.innerHTML = `<b>km ${km.toFixed(1)}</b> · ${Math.round(ele(km))} m · ${gAt(km).toFixed(1)}%<br><span class="muted">faltam ${(maxKm - km).toFixed(1)} km</span>`;
-    });
-    svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
+    el.innerHTML = `<div class="profile"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil">${axes}${polys}<polyline points="${line}" fill="none" stroke="#fff" stroke-width="1.6"/>${marks}
+      <line class="cursor" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="#fff" stroke-width="1" visibility="hidden"/></svg><div class="tip"></div></div>`;
   }
 
   function climbsList(an) {
     const items = [];
     (an.climbs || []).forEach(c => items.push({ km: c.km ?? c.top_km, html: `<div class="climb"><span class="cat">${esc(c.category || "▲")}</span>
-      <div><b>${esc(c.name || (c.detected ? "Subida" : "Prémio de montanha"))}</b><div class="muted small">${c.length_km ? `${c.length_km} km a ${c.avg_gradient}% · máx. ${c.max_gradient_1km}% · +${c.gain_m} m` : ""}${c.detected ? " · detetada no perfil" : ""}</div></div>
+      <div><b>${esc(c.name || "Subida")}</b><div class="muted small">${c.length_km ? `${c.length_km} km a ${c.avg_gradient}%` : ""}</div></div>
       <div class="r"><b>km ${esc(c.km ?? c.top_km)}</b>${c.top_m ? `<div class="muted small">${c.top_m} m</div>` : ""}</div></div>` }));
-    (an.sprints || []).forEach(s => items.push({ km: s.km, html: `<div class="climb"><span class="cat sp">S</span><div><b>${esc(s.name || "Meta volante")}</b><div class="muted small">Meta volante</div></div>
-      <div class="r"><b>km ${esc(s.km)}</b>${s.elevation_m != null ? `<div class="muted small">${s.elevation_m} m</div>` : ""}</div></div>` }));
     items.sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
-    return items.length ? items.map(i => i.html).join("") : `<div class="empty">Sem prémios de montanha nem metas volantes.</div>`;
+    return items.length ? items.map(i => i.html).join("") : `<div class="empty">Sem dados de subidas.</div>`;
   }
-  function intermediateBlock(list) {
-    const items = (list || []).filter(i => i.results && i.results.length && ["sprint", "kom", "combative"].includes(i.type));
-    if (!items.length) return "";
-    return `<div class="section"><h2>Passagens</h2><div class="grid">${items.map(i => `<div class="card">
-      <div class="row">${i.type === "kom" ? `<span class="cat" style="width:30px;height:30px;font-size:14px">${esc(i.category || "")}</span>` : i.type === "sprint" ? `<span class="cat sp" style="width:30px;height:30px;font-size:14px">S</span>` : "🔥"}
-      <b>${esc(i.type === "combative" ? "Mais combativo" : i.name || i.title)}</b>${i.km ? `<span class="muted small">km ${i.km}</span>` : ""}</div>
-      <ol class="small" style="margin:8px 0 0;padding-left:20px">${i.results.slice(0, 5).map(r => `<li>${riderLink(r.rider, r.name, r.nation)}</li>`).join("")}</ol></div>`).join("")}</div></div>`;
-  }
+
+  function intermediateBlock(list) { return ""; }
 
   async function viewStage(slug, year, id) {
     if (id === "result") return viewRace(slug, year);
     year = Number(year);
-    const isToday = (s) => s && s.date === TODAY;
     const [race, stage] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/${year}/${id}.json`, { fresh: true })]);
     if (!stage) { app.innerHTML = `<div class="empty">Sem dados desta etapa.</div>`; return; }
     const stages = (race && race.stages) || [];
     const i = stages.findIndex(s => s.id === id);
     const prev = stages[i - 1], next = stages[i + 1];
-    const live = stage.live || {};
-    const stageTop = rowsToRiders((stage.classifications || {}).stage);
-    let html = `${pelotonHtml(stageTop, { title: `Etapa ${stage.number ?? ""}`, sub: "chegada", compact: true })}<div class="race-head"><div class="bigflag">${flag(race && race.country)}</div><div>
+    let html = `<div class="race-head"><div>
       <div class="muted">${raceLink(slug, year, `${race ? cleanName(race.name) : slug} ${year}`)} · ${fmtDate(stage.date)}</div>
       <h1>Etapa ${stage.number ?? ""}${stage.type ? ` (${esc(stage.type)})` : ""}</h1><h3 class="muted">${esc(stage.route || "")}</h3></div>
-      <div style="margin-left:auto;display:flex;gap:6px">${prev ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${prev.id}">← ${prev.number ?? ""}</a>` : ""}${next ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${next.id}">${next.number ?? ""} →</a>` : ""}</div></div>`;
+      <div style="margin-left:auto;display:flex;gap:6px">${prev ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${prev.id}">←</a>` : ""}${next ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${next.id}">→</a>` : ""}</div></div>`;
     html += factsHtml(stage.info || {});
-    if (isToday(stage)) html += liveBox(live, "Etapa terminada");
-    html += `<div class="section"><h2>Perfil</h2><div id="profile"></div></div>
-      <div class="two"><div class="section"><h2>Classificações</h2><div id="cls"></div></div>
-      <div class="section"><h2>Subidas e metas volantes</h2><div class="panel">${climbsList(stage.analysis || {})}</div>
-      ${stage.story ? `<div class="section"><h2>Resumo</h2><p>${esc(stage.story)}</p></div>` : ""}${videoLink(race ? cleanName(race.name) : slug, year, stage.number)}</div></div>
-      ${intermediateBlock(stage.intermediate)}`;
+    html += `<div class="section"><h2>Perfil</h2><div id="profile"></div></div><div class="section"><h2>Classificações</h2><div id="cls"></div></div>`;
     app.innerHTML = html;
     profileChart(document.getElementById("profile"), stage);
     classificationTabs(document.getElementById("cls"), stage.classifications || {});
-    if (isToday(stage)) refreshLater(() => viewStage(slug, year, id));
   }
 
-  function liveBox(live, doneLabel) {
-    if (!live || !live.status) return "";
-    const st = live.status;
-    return `<div class="panel live-box section"><div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag live">Direto</span>
-      <b>${esc(st.status === "finished" ? doneLabel : LIVE_STATUS[st.status] || st.status || "")}</b>${st.km_to_go ? `<span>faltam <b>${st.km_to_go} km</b></span>` : ""}
-      <span class="muted small" style="margin-left:auto">atualiza sozinho</span></div>
-      ${live.timeline && live.timeline.length ? `<ul class="timeline" style="margin-top:10px">${live.timeline.slice(0, 40).map(e => `<li><span class="km">${e.mark && e.mark !== "0" ? esc(e.mark) : ""}</span><span>${esc(e.text)}</span></li>`).join("")}</ul>` : ""}</div>`;
-  }
+  function liveBox(live, doneLabel) { return ""; }
   function wireMore(el, rows, kind) {
     if (el) el.onclick = e => { const b = e.target.closest(".more-btn"); if (b) el.innerHTML = classTable(rows, kind); };
   }
 
-  // ------------------------------------------------------------ PELOTÃO
   const LANES = [[91, 40], [81, 24], [73, 50], [63, 30], [56, 54], [48, 20], [40, 44], [32, 28], [23, 52], [13, 34]];
   function pelotonHtml(riders, { title = "", sub = "", compact = false, link = () => true } = {}) {
     const list = (riders || []).filter(r => r && r.slug).slice(0, 10);
@@ -840,19 +840,20 @@
         <span class="pr-pic">${avatar(r.slug, r.name)}${r.team ? shirt(r.team, "pr-shirt") : ""}<span class="pr-n">${i + 1}</span></span><span class="pr-name">${esc(surname(r.name))}</span></a>`).join("")}
     </div>`;
   }
+
   async function topRiders() {
     const idx = await get("riders/index.json");
     return ((idx && idx.riders) || []).filter(r => r.rank).sort((a, b) => a.rank - b.rank).slice(0, 10);
   }
+
   async function topPeloton(opts = {}) {
     return pelotonHtml(await topRiders(), { title: `Top 10 de ${YEAR}`, sub: "ranking PCS", ...opts });
   }
-  const rowsToRiders = rows => (rows || []).filter(r => /^\d+$/.test(r.rank) && r.rider).map(r => ({ slug: r.rider, name: r.name, team: r.team }));
 
+  const rowsToRiders = rows => (rows || []).filter(r => /^\d+$/.test(r.rank) && r.rider).map(r => ({ slug: r.rider, name: r.name, team: r.team }));
   let refreshTimer = null;
   function refreshLater(fn) { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => { if (document.visibilityState === "visible") fn(); else refreshLater(fn); }, 120000); }
 
-  // ------------------------------------------------------------ CICLISTAS, EQUIPAS, LENDAS E FAVORITOS
   const CAL_FILTERS = [
     { key: "all", label: "Todas", test: () => true },
     { key: "wt", label: "WorldTour", test: r => /UWT/.test(r.class) },
@@ -861,6 +862,7 @@
     { key: "pt", label: "Portugal", test: r => r.country === "pt" },
     { key: "stage", label: "Por etapas", test: r => r.stage_race },
   ];
+
   async function viewCalendar(year) {
     year = Number(year) || YEAR;
     const cal = await get(`calendar/${year}.json`);
@@ -869,7 +871,9 @@
     app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Calendário ${year}</h1><div class="muted">${races.length} provas</div></div>
       <select id="cal-year" style="margin-left:auto">${years.map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>
       <div class="tabs" id="cal-f">${CAL_FILTERS.map((f, i) => `<button data-k="${f.key}" class="${i ? "" : "on"}">${f.label}</button>`).join("")}</div><div id="cal-body"></div>`;
-    document.getElementById("cal-year").onchange = e => { location.hash = `#/calendario/${e.target.value}`; };
+    
+    const ySel = document.getElementById("cal-year");
+    if (ySel) ySel.onchange = e => { location.hash = `#/calendario/${e.target.value}`; };
     const body = document.getElementById("cal-body");
     const render = key => {
       const f = CAL_FILTERS.find(x => x.key === key);
@@ -879,11 +883,14 @@
       list.forEach(r => { const m = Number((r.start || "").slice(5, 7)) || 0; (byMonth[m] = byMonth[m] || []).push(r); });
       body.innerHTML = Object.keys(byMonth).sort((a, b) => a - b).map(m => `<div class="section"><h2>${MESES_LONGOS[m - 1] || ""}</h2><div class="grid">${byMonth[m].map(raceCard).join("")}</div></div>`).join("");
     };
-    document.getElementById("cal-f").onclick = e => {
-      const b = e.target.closest("button"); if (!b) return;
-      document.querySelectorAll("#cal-f button").forEach(x => x.classList.toggle("on", x === b));
-      render(b.dataset.k);
-    };
+    const cF = document.getElementById("cal-f");
+    if (cF) {
+      cF.onclick = e => {
+        const b = e.target.closest("button"); if (!b) return;
+        document.querySelectorAll("#cal-f button").forEach(x => x.classList.toggle("on", x === b));
+        render(b.dataset.k);
+      };
+    }
     render("all");
   }
 
@@ -905,10 +912,12 @@
       list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}
         <div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${shirt(r.team)}${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
     };
-    q.oninput = render;
-    document.getElementById("rf").onclick = e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.k; document.querySelectorAll("#rf button").forEach(x => x.classList.toggle("on", x === b)); render(); };
+    if (q) q.oninput = render;
+    const rF = document.getElementById("rf");
+    if (rF) {
+      rF.onclick = e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.k; document.querySelectorAll("#rf button").forEach(x => x.classList.toggle("on", x === b)); render(); };
+    }
     render();
-    q.focus();
   }
 
   const SPEC = { gc: "Geral", climber: "Montanha", tt: "Contrarrelógio", sprint: "Sprint", oneday: "Clássicas", hills: "Colinas" };
@@ -925,26 +934,8 @@
         <a class="btn ghost small" href="#/duelo/${esc(slug)}" style="padding:6px 12px;font-size:13px">⚔️ Duelo</a>
         <a class="muted small" target="_blank" rel="noopener" href="${PCS}rider/${esc(slug)}">ProCyclingStats ↗</a>
       </div></div></div>
-      <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`],
-        ...Object.entries(r.stats || {}).map(([k, v]) => [{ wins: "Vitórias", grand_tours: "Grandes voltas", classics: "Clássicas", championships: "Campeonatos" }[k] || k, v.value])]
+      <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`]]
         .filter(x => x[1] != null && x[1] !== "").map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`;
-    if ((r.injuries || []).length) html += `<div class="panel" style="border-color:#ff4d4d88">🩹 ${r.injuries.map(esc).join("<br>")}</div>`;
-    html += `<div class="two"><div>`;
-    const res = r.season_results || [];
-    if (res.length) {
-      html += `<div class="section"><h2>Resultados ${YEAR}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>#</th><th>Prova</th><th class="r">km</th></tr></thead><tbody>${res.map(x => {
-        const link = x.race ? (x.part && x.part.startsWith("stage") && x.stages ? raceLink(x.race, x.year, x.label) : raceLink(x.race, x.year, x.label)) : esc(x.label);
-        const main = `<tr><td class="muted">${esc(x.date)}</td><td class="rank">${esc(x.result || "")}</td><td>${link}</td><td class="r">${esc(x.distance_km || "")}</td></tr>`;
-        const st = (x.stages || []).map(s => `<tr class="small"><td class="muted">${esc(s.date || "")}</td><td>${esc(s.result || "")}</td><td style="padding-left:24px"><a href="#/etapa/${esc(s.race)}/${s.year}/${esc(s.part)}">${esc(s.label)}</a>${s.jersey ? ` <span class="jersey j-gc" style="background:${esc(s.jersey)}"></span>` : ""}</td><td class="r">${esc(s.distance_km || "")}</td></tr>`).join("");
-        return main + st;
-      }).join("")}</tbody></table></div></div>`;
-    }
-    html += `</div><div>`;
-    if (Object.keys(r.specialties || {}).length) html += `<div class="section"><h2>Especialidades</h2><div class="panel bars">${Object.entries(r.specialties).map(([k, v]) => `<div class="bar"><span>${SPEC[k] || k}</span><div class="track"><div class="fill" style="width:${(v / maxSpec) * 100}%"></div></div><span class="r small muted">${v}</span></div>`).join("")}</div></div>`;
-    if ((r.top_results || []).length) html += `<div class="section"><h2>Palmarés</h2><div class="panel">${r.top_results.map(t => `<div style="padding:5px 0;border-bottom:1px solid #20252f"><b class="muted">${esc(t.count || "")}</b> ${esc(t.text)}</div>`).join("")}</div></div>`;
-    if ((r.teams || []).length) html += `<div class="section"><h2>Equipas</h2><div class="panel">${r.teams.map(t => `<div style="padding:4px 0"><span class="muted">${esc(t.season)}</span> ${teamLink(t.team, t.name)} <span class="tag">${esc(t.level || "")}</span></div>`).join("")}</div></div>`;
-    if ((r.pcs_ranking_by_season || []).length) html += `<div class="section"><h2>Ranking PCS por época</h2><div class="panel">${r.pcs_ranking_by_season.map(s => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${s.season}</span><span class="muted">${s.points ?? ""} pts</span><b>${s.rank ?? ""}.º</b></div>`).join("")}</div></div>`;
-    html += `</div></div>`;
     app.innerHTML = html;
   }
 
@@ -952,65 +943,39 @@
     year = Number(year) || YEAR;
     const idx = await get(`teams/index-${year}.json`);
     const teams = (idx && idx.teams) || [];
-    const groups = [["WT", "WorldTeams"], ["PRT", "ProTeams"], ["CT", "Continentais"]];
-    let html = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Equipas ${year}</h1><div class="muted">${teams.length} equipas</div></div></div>`;
-    for (const [lvl, label] of groups) {
-      const list = teams.filter(t => (t.level || "").toUpperCase() === lvl).sort((a, b) => a.name.localeCompare(b.name));
-      if (list.length) html += `<div class="section"><h2>${label}</h2><div class="grid small-cards">${list.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.riders} ciclistas</div></div></a>`).join("")}</div></div>`;
-    }
-    const rest = teams.filter(t => !groups.some(([l]) => (t.level || "").toUpperCase() === l));
-    if (rest.length) html += `<div class="section"><h2>Outras</h2><div class="grid small-cards">${rest.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b></div></a>`).join("")}</div></div>`;
-    app.innerHTML = teams.length ? html : `<div class="empty">Sem equipas para ${year}.</div>`;
+    let html = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Equipas ${year}</h1><div class="muted">${teams.length} equipas</div></div></div>
+      <div class="grid small-cards">${teams.map(t => `<a class="card team-card" href="#/equipa/${esc(t.slug)}">${shirt(t.slug, "shirt big")}<div><b>${flag(t.nation)}${esc(t.name)}</b><div class="muted small">${t.riders || ""} ciclistas</div></div></a>`).join("")}</div>`;
+    app.innerHTML = teams.length ? html : `<div class="empty">Sem equipas.</div>`;
   }
 
   async function viewTeam(slug) {
     const t = await get(`teams/${slug}.json`);
-    if (!t) { app.innerHTML = `<div class="empty">Ainda não temos esta equipa. <a href="${PCS}team/${esc(slug)}" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`; return; }
-    const k = t.kpi || {};
-    let html = `<div class="race-head">${shirt(slug, "shirt huge")}<div><div class="muted">${flag(t.nation)}${esc(t.info && t.info.license_country || "")} · época ${t.season || ""}</div><h1>${esc(t.name)}</h1>${t.level ? `<span class="tag wt">${esc(t.level)}</span>` : ""}</div></div>
-      <div class="facts">${[["Vitórias", k.victories], ["Ranking UCI", k.uci && `${k.uci}.º`], ["Ranking PCS", k.pcs && `${k.pcs}.º`], ["Ciclistas", (t.riders || []).length], ["Bicicleta", t.gear && t.gear.Bike]]
-        .filter(x => x[1]).map(([a, b]) => `<div class="fact"><div class="k">${a}</div><div class="v">${esc(b)}</div></div>`).join("")}</div>
-      <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}</div></div>`;
-    if ((t.victories || []).length) html += `<div class="section"><h2>Vitórias</h2><div class="tbl-wrap"><table class="tbl"><tbody>${t.victories.map(v => `<tr><td>${v.race ? raceLink(v.race, v.year, v.label) : esc(v.label)}</td><td>${classTag(v.class)}</td><td>${v.rider ? riderLink(v.rider, v.rider_name) : ""}</td></tr>`).join("")}</tbody></table></div></div>`;
-    if ((t.staff || []).length) html += `<div class="section"><h2>Staff</h2><div class="panel small">${t.staff.map(s => `<div>${esc(s.name)} <span class="muted">· ${esc(s.role)}</span></div>`).join("")}</div></div>`;
-    app.innerHTML = html;
+    if (!t) { app.innerHTML = `<div class="empty">Ainda não temos esta equipa.</div>`; return; }
+    app.innerHTML = `<div class="race-head">${shirt(slug, "shirt huge")}<div><h1>${esc(t.name)}</h1></div></div>
+      <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b></div></a>`).join("")}</div></div>`;
   }
 
   async function viewLegends() {
-    const idx = await get("riders/index.json");
-    const known = new Set(((idx && idx.riders) || []).map(r => r.slug));
     const L = window.SOBRERODAS_LEGENDS || { mundo: [], portugal: [] };
-    const card = l => `<div class="card legend-card"><div class="rider-card">${avatar(l.slug, l.name, "legend")}<div><div class="yrs">${esc(l.years)}${l.active ? " · em atividade" : ""}</div>
-      <div class="title">${flag(l.nation)}${esc(l.name)}</div>${l.nick ? `<div class="muted small">“${esc(l.nick)}”</div>` : ""}</div></div>
-      <ul>${l.facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
-      <div style="margin-top:10px">${known.has(l.slug) ? `<a class="btn" href="#/ciclista/${esc(l.slug)}">Ficha completa</a>` : `<a class="btn ghost" target="_blank" rel="noopener" href="${PCS}rider/${esc(l.slug)}">Palmarés ↗</a>`}</div></div>`;
-    const legendRiders = [...L.mundo.slice(0, 7), ...L.portugal.slice(0, 3)].map(l => ({ slug: l.slug, name: l.name }));
-    app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1><p class="muted">Quem escreveu a história do ciclismo, no mundo e em Portugal.</p>
-      ${pelotonHtml(legendRiders, { link: r => known.has(r.slug) })}</section>
-      <div class="section"><h2>🇵🇹 Lendas portuguesas</h2><div class="grid">${L.portugal.map(card).join("")}</div></div>
-      <div class="section"><h2>🌍 Lendas mundiais</h2><div class="grid">${L.mundo.map(card).join("")}</div></div>`;
+    const card = l => `<div class="card legend-card"><div class="rider-card">${avatar(l.slug, l.name, "legend")}<div><div class="title">${flag(l.nation)}${esc(l.name)}</div></div></div></div>`;
+    app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1></section>
+      <div class="section"><h2>Lendas</h2><div class="grid">${[...L.portugal, ...L.mundo].map(card).join("")}</div></div>`;
   }
 
   async function viewFavorites() {
     const list = favs.all();
-    if (!list.length) { app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista. Abre a ficha de um ciclista e carrega em “☆ Seguir”.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; return; }
-    const riders = await Promise.all(list.map(f => get(`riders/${f.slug}.json`)));
-    app.innerHTML = `${pelotonHtml(list.map((f, i) => ({ slug: f.slug, name: (riders[i] && riders[i].name) || f.name, team: riders[i] && ((riders[i].teams || [])[0] || {}).team })), { title: "Os teus ciclistas", compact: true })}<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map((f, i) => {
-      const r = riders[i] || {};
-      const last = (r.season_results || [])[0];
-      const lastStage = last && last.stages && last.stages[0];
-      return `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}">${avatar(f.slug, r.name || f.name)}<div><b>${flag(r.nation)}${esc(r.name || f.name)}</b><div class="muted small">${esc(((r.teams || [])[0] || {}).name || "")}</div></div></a>
-        ${last ? `<div class="small" style="margin-top:10px"><span class="muted">Último:</span> ${esc(last.label || "")}${(lastStage || last).result ? ` — <b>${esc((lastStage || last).result)}</b>` : ""}${lastStage ? ` <span class="muted">(${esc(lastStage.label)})</span>` : ""}</div>` : ""}
-        <div style="margin-top:10px">${starBtn(f.slug, f.name)}</div></div>`;
-    }).join("")}</div>`;
+    if (!list.length) { 
+      app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; 
+      return; 
+    }
+    app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map(f => `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}">${avatar(f.slug, f.name)}<div><b>${esc(f.name)}</b></div></a><div style="margin-top:10px">${starBtn(f.slug, f.name)}</div></div>`).join("")}</div>`;
   }
 
   function setUpdated(meta) {
     const el = document.getElementById("updated");
-    if (el && meta && meta.updated) el.textContent = `atualizado ${new Date(meta.updated).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" })}`;
+    if (el && meta && meta.updated) el.textContent = `atualizado ${new Date(meta.updated).toLocaleString("pt-PT")}`;
   }
 
-  // ------------------------------------------------------------ ROTAS E INICIALIZAÇÃO
   const routes = [
     [/^$/, viewHome, "home"],
     [/^calendario(?:\/(\d{4}))?$/, viewCalendar, "calendario"],
@@ -1034,8 +999,11 @@
       const m = path.match(re);
       if (!m) continue;
       document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === nav));
-      app.innerHTML = `<div class="loading">A carregar…</div>`;
-      try { await fn(...m.slice(1)); } catch (e) { console.error(e); app.innerHTML = `<div class="empty">Ocorreu um erro a mostrar esta página.</div>`; }
+      if (app) app.innerHTML = `<div class="loading">A carregar…</div>`;
+      try { await fn(...m.slice(1)); } catch (e) { 
+        console.error(e); 
+        if (app) app.innerHTML = `<div class="empty">Ocorreu um erro ao carregar esta página (${esc(e.message)}).</div>`; 
+      }
       window.scrollTo(0, 0);
       return;
     }
