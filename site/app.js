@@ -31,11 +31,14 @@
     return p;
   }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  
+  // BANDEIRAS REAIS EM ALTA DEFINIÇÃO (Compatíveis com Windows, Mac e Telemóveis)
   const flag = cc => {
     if (!cc || cc.length !== 2) return "";
     const code = cc.toLowerCase() === "uk" ? "gb" : cc.toLowerCase();
-    return `<span class="flag" title="${esc(cc.toUpperCase())}">${String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1f1a5 + c.charCodeAt(0)))}</span>`;
+    return `<img class="flag" src="https://flagcdn.com/28x21/${code}.png" srcset="https://flagcdn.com/56x42/${code}.png 2x" width="20" height="15" alt="${esc(cc.toUpperCase())}" style="border-radius:3px;vertical-align:-2px;margin-right:7px;box-shadow:0 1px 3px rgba(0,0,0,0.3)">`;
   };
+
   const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
   const MESES_LONGOS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   const fmtDate = iso => (iso ? `${Number(iso.slice(8, 10))} ${MESES[Number(iso.slice(5, 7)) - 1]}` : "");
@@ -160,7 +163,7 @@
     if (!prof || !prof.points || prof.points.length < 2) {
       const img = (stage.profile_images || [])[0];
       el.innerHTML = img ? `<div class="profile"><img src="${esc(img)}" alt="Perfil da etapa" referrerpolicy="no-referrer" style="width:100%;border-radius:10px"></div>`
-        : `<div class="empty">Perfil altimétrico detalhado a preparar.</div>`;
+        : `<div class="empty">Perfil altimétrico em preparação.</div>`;
       return;
     }
     const pts = prof.points, W = 1000, H = 280, L = 44, R = 12, T = 36, B = 26;
@@ -231,19 +234,62 @@
       <ol class="small" style="margin:8px 0 0;padding-left:20px">${i.results.slice(0, 5).map(r => `<li>${riderLink(r.rider, r.name, r.nation)}</li>`).join("")}</ol></div>`).join("")}</div></div>`;
   }
 
-  // ------------------------------------------------------------ páginas
+  // ------------------------------------------------------------ PÁGINA INICIAL MODERNA (HOME)
   async function viewHome() {
     const [live, cal, meta] = await Promise.all([get("live.json", { fresh: true }), get(`calendar/${YEAR}.json`), get("meta.json", { fresh: true })]);
     const races = (cal && cal.races) || [];
     const liveRaces = (live && live.date === TODAY && live.races) || [];
-    const next = races.filter(r => r.start > TODAY).slice(0, 8);
+    const next = races.filter(r => r.start >= TODAY).slice(0, 8);
     const done = races.filter(r => (r.end || r.start) < TODAY).slice(-8).reverse();
-    const big = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
-    const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
-    let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
-      <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
-      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#/calendario">Ver calendário</a><a class="btn ghost" href="#/lendas">Lendas</a></div>
-      ${await topPeloton()}</section>`;
+    const bigSlugs = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
+    const bigRaces = bigSlugs.map(s => races.find(r => r.slug === s)).filter(Boolean);
+
+    // Próxima grande prova no horizonte
+    const nextFeatured = next[0];
+    let daysUntil = "";
+    if (nextFeatured && nextFeatured.start) {
+      const diff = Math.ceil((new Date(nextFeatured.start) - new Date(TODAY)) / 86400000);
+      daysUntil = diff === 0 ? "HOJE" : diff === 1 ? "AMANHÃ" : `EM ${diff} DIAS`;
+    }
+
+    let html = `<section class="hero">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="kicker">ÉPOCA ${YEAR} · CIRCUITO MUNDIAL</div>
+        <span class="tag wt" style="font-weight:700">104 Provas · WorldTour & ProSeries</span>
+      </div>
+      <h1>O PELOTÃO, ETAPA A ETAPA</h1>
+      <p class="muted" style="max-width:650px;font-size:16px;line-height:1.5">
+        Acompanha as classificações, altimetrias, perfis e o alinhamento das melhores equipas e ciclistas do mundo.
+      </p>
+      
+      <!-- Atalhos rápidos -->
+      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 24px">
+        <a class="btn" href="#/calendario">📅 Ver Calendário Completo</a>
+        <a class="btn ghost" href="#/ciclistas">🚴 Ciclistas</a>
+        <a class="btn ghost" href="#/equipas">🛡️ Equipas</a>
+        <a class="btn ghost" href="#/lendas">⭐ Lendas</a>
+      </div>
+
+      ${await topPeloton()}
+    </section>`;
+
+    // BLOCO DE DESTAQUE: PRÓXIMA CORRIDA
+    if (nextFeatured) {
+      html += `<section class="section">
+        <div class="panel" style="background:linear-gradient(135deg, rgba(255, 214, 10, 0.12), rgba(20, 24, 34, 0.95));border:1px solid rgba(255, 214, 10, 0.35);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px">
+          <div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+              <span class="tag live" style="background:var(--accent);color:#111">${daysUntil}</span>
+              <span class="muted small">${fmtRange(nextFeatured.start, nextFeatured.end)}</span>
+            </div>
+            <h2 style="margin:4px 0 8px;font-size:32px">${flag(nextFeatured.country)}${esc(cleanName(nextFeatured.name))} ${nextFeatured.year || YEAR}</h2>
+            <div class="row">${classTag(nextFeatured.class)}${nextFeatured.stage_race ? `<span class="tag">Por Etapas</span>` : `<span class="tag">Clássica de Um Dia</span>`}</div>
+          </div>
+          <a class="btn" href="#/prova/${esc(nextFeatured.slug)}/${nextFeatured.year || YEAR}" style="padding:12px 22px;font-size:15px">Ver Prova & Inscritos →</a>
+        </div>
+      </section>`;
+    }
+
     if (liveRaces.length) {
       html += `<section class="section"><div class="section-head"><h2>Hoje na estrada</h2></div><div class="grid">${liveRaces.map(l => `
         <a class="card live-box" href="${l.stage && l.stage !== "result" ? `#/etapa/${esc(l.race)}/${l.year}/${esc(l.stage)}` : `#/prova/${esc(l.race)}/${l.year}`}">
@@ -253,12 +299,67 @@
           ${l.leader && l.leader.name ? `<div class="small" style="margin-top:6px"><span class="jersey j-gc"></span>${esc(niceName(l.leader.name))}</div>` : ""}
         </a>`).join("")}</div></section>`;
     }
-    if (bigRaces.length) html += `<section class="section"><div class="section-head"><h2>Grandes voltas</h2></div><div class="grid">${bigRaces.map(raceCard).join("")}</div></section>`;
-    if (next.length) html += `<section class="section"><div class="section-head"><h2>A seguir</h2><a class="muted" href="#/calendario">Calendário completo →</a></div><div class="grid">${next.map(raceCard).join("")}</div></section>`;
-    if (done.length) html += `<section class="section"><div class="section-head"><h2>Últimos resultados</h2></div><div class="grid">${done.map(raceCard).join("")}</div></section>`;
+
+    // GRANDES VOLTAS COM DESIGN PERSONALIZADO
+    if (bigRaces.length) {
+      html += `<section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Grandes Voltas & Monumentos</h2>
+            <span class="muted small">As provas mais prestigiadas e exigentes da temporada</span>
+          </div>
+        </div>
+        <div class="grid">${bigRaces.map(grandTourCard).join("")}</div>
+      </section>`;
+    }
+
+    if (next.length > 1) {
+      html += `<section class="section">
+        <div class="section-head">
+          <h2>Próximas Provas</h2>
+          <a class="muted" href="#/calendario">Calendário completo →</a>
+        </div>
+        <div class="grid">${next.slice(1, 9).map(raceCard).join("")}</div>
+      </section>`;
+    }
+
+    if (done.length) {
+      html += `<section class="section">
+        <div class="section-head">
+          <h2>Últimos Vencedores</h2>
+        </div>
+        <div class="grid">${done.map(raceCard).join("")}</div>
+      </section>`;
+    }
+
     app.innerHTML = html;
     setUpdated(meta);
   }
+
+  // CARTÕES PERSONALIZADOS PARA O GIRO, TOUR, VUELTA E VOLTA A PORTUGAL
+  function grandTourCard(r) {
+    const st = status(r);
+    const configs = {
+      "giro-d-italia": { border: "#ff4fa3", bg: "rgba(255, 79, 163, 0.08)", jersey: "Maglia Rosa", icon: "🌸" },
+      "tour-de-france": { border: "#ffd60a", bg: "rgba(255, 214, 10, 0.08)", jersey: "Maillot Jaune", icon: "🟡" },
+      "vuelta-a-espana": { border: "#ff4d4d", bg: "rgba(255, 77, 77, 0.08)", jersey: "La Roja", icon: "🔴" },
+      "volta-a-portugal": { border: "#2ecc71", bg: "rgba(46, 204, 113, 0.08)", jersey: "Camisola Amarela", icon: "🇵🇹" }
+    };
+    const cfg = configs[r.slug] || { border: "var(--line)", bg: "var(--panel)", jersey: "Líder", icon: "🏆" };
+
+    return `<a class="card" href="#/prova/${esc(r.slug)}/${r.year}" style="border-left: 4px solid ${cfg.border}; background: linear-gradient(135deg, ${cfg.bg}, var(--panel));">
+      <div class="row" style="justify-content:space-between">
+        <span class="date" style="color:${cfg.border}">${fmtRange(r.start, r.end)}</span>
+        <span class="tag" style="border-color:${cfg.border};color:${cfg.border}">${cfg.jersey}</span>
+      </div>
+      <div class="title" style="margin:8px 0">${flag(r.country)}${esc(cleanName(r.name))}</div>
+      <div class="row">${classTag(r.class)}<span class="tag">Por Etapas</span></div>
+      ${r.winner ? `<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;gap:6px;font-size:13px">
+        <span style="font-size:16px">${cfg.icon}</span> <span class="muted">Vencedor:</span> <b>${esc(niceName(r.winner.name))}</b>
+      </div>` : `<div class="muted small" style="margin-top:10px">Edição ${r.year} por disputar</div>`}
+    </a>`;
+  }
+
   function raceCard(r) {
     const st = status(r);
     return `<a class="card" href="#/prova/${esc(r.slug)}/${r.year}">
@@ -313,7 +414,6 @@
     }
     const st = status(race);
 
-    // Se houver resultados, mostra o top 10; se ainda não houver, mostra os líderes das equipas inscritas no pelotão!
     let raceTop = rowsToRiders(race.stage_race ? (race.final || {}).gc : race.results);
     let pelTitle = race.stage_race ? (race.finished || st === "done" ? "Classificação final" : "Classificação geral") : "Resultado";
     if (!raceTop.length && race.startlist && race.startlist.length) {
@@ -353,12 +453,12 @@
           <div><h2>Subidas e metas</h2><div class="panel">${climbsList(race.analysis || {})}</div>${race.story ? `<div class="section"><h2>Resumo</h2><p>${esc(race.story)}</p></div>` : ""}${videoLink(cleanName(race.name), year)}</div></div>`;
       } else {
         html += `<div class="section" style="margin-top:20px"><div class="panel" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div><h3 style="margin:0 0 4px">Transmissão e Acompanhamento</h3><span class="muted small">Em direto nos canais desportivos habituais (Eurosport / Max).</span></div>
+          <div><h3 style="margin:0 0 4px">Transmissão e Acompanhamento</h3><span class="muted small">Em direto nos canais desportivos habituais (Eurosport / Max / RTP).</span></div>
           <span class="tag wt" style="font-size:12px;padding:6px 12px">📡 Transmissão TV</span></div></div>`;
       }
     }
 
-    if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist, !race.results || !race.results.length);
+    if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist);
     html += historyHtml(hist, race.stage_race);
     app.innerHTML = html;
     document.getElementById("race-year").onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
@@ -392,8 +492,7 @@
   }
   const videoLink = (name, year, stage) => `<p><a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} ${year} ${stage ? `stage ${stage} ` : ""}highlights`)}">▶ Ver resumo em vídeo</a></p>`;
 
-  // LISTA DE PARTICIPANTES RICA: COM FOTOS, CAMISOLAS E BOTÃO DE SEGUIR
-  function startlistHtml(sl, forceOpen = false) {
+  function startlistHtml(sl) {
     const n = sl.reduce((s, t) => s + t.riders.length, 0), out = sl.reduce((s, t) => s + t.riders.filter(r => r.status).length, 0);
     return `<div class="section"><div class="section-head"><h2>Inscritos / Startlist</h2><span class="muted small">${sl.length} equipas · ${n} ciclistas${out ? ` · ${out} desistências` : ""}</span></div>
       <div class="grid" style="margin-top:14px">${sl.map(t => `<div class="card">
