@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 1: Tugas no Pelotão & TV) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 2: Radar de Habilidades & Troféus) */
 (() => {
   "use strict";
 
@@ -26,6 +26,14 @@
       .tv-card { background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(255, 214, 10, 0.3); border-radius: 14px; padding: 18px; margin: 18px 0; }
       .tuga-card { border-left: 3px solid #2ecc71; transition: transform .15s; }
       .tuga-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+      /* Estilos do Radar & Troféus */
+      .radar-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--panel2); border-radius: 16px; padding: 16px; border: 1px solid var(--line); }
+      .trophy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+      .trophy-badge { background: linear-gradient(135deg, rgba(255,214,10,0.1), rgba(20,24,34,0.9)); border: 1px solid rgba(255,214,10,0.35); border-radius: 12px; padding: 12px 10px; text-align: center; }
+      .trophy-badge .icon { font-size: 24px; margin-bottom: 4px; display: block; }
+      .trophy-badge .count { font-family: var(--head); font-size: 20px; font-weight: 800; color: var(--accent); }
+      .trophy-badge .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
@@ -219,6 +227,85 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
+  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES EM SVG (SPIDER CHART)
+  function radarChartSvg(specialties, maxVal = 100) {
+    const keys = [
+      { k: "climber", label: "Montanha", icon: "⛰️" },
+      { k: "gc", label: "Geral (GC)", icon: "🏆" },
+      { k: "tt", label: "Contrarrelógio", icon: "⏱️" },
+      { k: "sprint", label: "Sprint", icon: "⚡" },
+      { k: "oneday", label: "Clássicas", icon: "🧱" },
+      { k: "hills", label: "Colinas", icon: "🧗" }
+    ];
+
+    const cx = 160, cy = 135, R = 85;
+    const maxSpec = Math.max(1, maxVal, ...Object.values(specialties || {}));
+
+    // Grelha concêntrica (3 níveis)
+    let rings = "";
+    [0.35, 0.70, 1.0].forEach(level => {
+      const pts = keys.map((_, i) => {
+        const angle = (i * Math.PI / 3) - (Math.PI / 2);
+        return `${(cx + R * level * Math.cos(angle)).toFixed(1)},${(cy + R * level * Math.sin(angle)).toFixed(1)}`;
+      }).join(" ");
+      rings += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>`;
+    });
+
+    // Eixos radiais e etiquetas
+    let axes = "", labels = "";
+    keys.forEach((item, i) => {
+      const angle = (i * Math.PI / 3) - (Math.PI / 2);
+      const ex = cx + R * Math.cos(angle);
+      const ey = cy + R * Math.sin(angle);
+      axes += `<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="2 3"/>`;
+
+      const lx = cx + (R + 25) * Math.cos(angle);
+      const ly = cy + (R + 20) * Math.sin(angle);
+      const val = (specialties && specialties[item.k]) || 0;
+      labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="#a6b1c2" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">${item.icon} ${item.label} <tspan fill="var(--accent)" font-weight="800">(${val})</tspan></text>`;
+    });
+
+    // Polígono de dados do ciclista
+    const dataPoints = keys.map((item, i) => {
+      const angle = (i * Math.PI / 3) - (Math.PI / 2);
+      const val = (specialties && specialties[item.k]) || 0;
+      const ratio = Math.max(0.12, Math.min(1, val / maxSpec));
+      const px = cx + R * ratio * Math.cos(angle);
+      const py = cy + R * ratio * Math.sin(angle);
+      return `${px.toFixed(1)},${py.toFixed(1)}`;
+    });
+
+    const polygonPts = dataPoints.join(" ");
+    let dots = dataPoints.map(p => {
+      const [px, py] = p.split(",");
+      return `<circle cx="${px}" cy="${py}" r="4" fill="var(--accent)" stroke="#111" stroke-width="1.5"/>`;
+    }).join("");
+
+    return `<div class="radar-wrap">
+      <svg viewBox="0 0 320 270" style="width:100%;max-width:340px;height:auto;display:block">
+        ${rings}${axes}
+        <polygon points="${polygonPts}" fill="rgba(255, 214, 10, 0.22)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+        ${dots}${labels}
+      </svg>
+    </div>`;
+  }
+
+  // Galeria de troféus e palmarés
+  function trophiesHtml(r) {
+    const stats = r.stats || {};
+    const wins = (stats.wins && stats.wins.value) || 0;
+    const gts = (stats.grand_tours && stats.grand_tours.value) || 0;
+    const classics = (stats.classics && stats.classics.value) || 0;
+    const champs = (stats.championships && stats.championships.value) || 0;
+
+    return `<div class="trophy-grid">
+      <div class="trophy-badge"><span class="icon">🏆</span><div class="count">${wins}</div><div class="lbl">Vitórias Pro</div></div>
+      <div class="trophy-badge"><span class="icon">🟡</span><div class="count">${gts}</div><div class="lbl">Grandes Voltas</div></div>
+      <div class="trophy-badge"><span class="icon">🪨</span><div class="count">${classics}</div><div class="lbl">Monumentos</div></div>
+      <div class="trophy-badge"><span class="icon">🌈</span><div class="count">${champs}</div><div class="lbl">Campeonatos</div></div>
+    </div>`;
+  }
+
   // ------------------------------------------------------------ ⚔️ DUELO DE CICLISTAS
   async function viewVersus(slugA, slugB) {
     const idx = await get("riders/index.json");
@@ -380,7 +467,6 @@
     const big = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     
-    // Filtro automático de ciclistas portugueses
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
 
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
@@ -402,7 +488,6 @@
         </a>`).join("")}</div></section>`;
     }
 
-    // BLOCO 1: GRANDES VOLTAS PERSONALIZADAS
     if (bigRaces.length) {
       html += `<section class="section">
         <div class="section-head">
@@ -413,7 +498,6 @@
       </section>`;
     }
 
-    // BLOCO 2: 🇵🇹 PORTUGUESES NO PELOTÃO
     if (tugas.length) {
       html += `<section class="section">
         <div class="section-head">
@@ -450,7 +534,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA (COM GUIA DE TRANSMISSÃO TV)
+  // ------------------------------------------------------------ PÁGINA DA PROVA (COM GUIA TV)
   async function viewRace(slug, year) {
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
@@ -469,7 +553,6 @@
       pelTitle = "Pelotão à partida";
     }
 
-    // Guia TV Inteligente
     const isPT = race.country === "pt";
     const tvChannel = isPT ? "RTP2 / Eurosport" : "Eurosport 1 / Max";
     const tvTime = race.info && race.info.start_time ? `Transmissão a partir das ${race.info.start_time.slice(0, 5)}` : "Emissão da tarde nos canais habituais";
@@ -478,7 +561,6 @@
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
 
-    // BLOCO DE GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -748,13 +830,14 @@
     render();
   }
 
+  // ------------------------------------------------------------ FICHA DO CICLISTA (COM RADAR & TROFÉUS)
   const SPEC = { gc: "Geral", climber: "Montanha", tt: "Contrarrelógio", sprint: "Sprint", oneday: "Clássicas", hills: "Colinas" };
   async function viewRider(slug) {
     const r = await get(`riders/${slug}.json`);
     if (!r) { app.innerHTML = `<div class="empty">Ainda não temos a ficha deste ciclista. <a href="${PCS}rider/${esc(slug)}" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`; return; }
     const age = r.birthdate ? Math.floor((Date.now() - new Date(r.birthdate)) / 31557600000) : null;
-    const maxSpec = Math.max(1, ...Object.values(r.specialties || {}));
     const team = (r.teams || []).find(t => String(t.season).includes(String(YEAR))) || (r.teams || [])[0];
+    
     let html = `<div class="race-head">${avatar(slug, r.name, "big")}<div>
       <div class="muted">${flag(r.nation)}${esc(r.nationality || "")}${team ? ` · ${teamLink(team.team, team.name)}` : ""}</div><h1>${esc(r.name)}</h1>
       <div class="row" style="display:flex;gap:8px;align-items:center">
@@ -762,8 +845,36 @@
         <a class="btn ghost small" href="#/duelo/${esc(slug)}" style="padding:6px 12px;font-size:13px">⚔️ Duelo</a>
         <a class="muted small" target="_blank" rel="noopener" href="${PCS}rider/${esc(slug)}">ProCyclingStats ↗</a>
       </div></div></div>
+      
       <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`]]
         .filter(x => x[1] != null && x[1] !== "").map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`;
+
+    // NOVIDADE: Galeria de Troféus
+    html += `<div class="section"><div class="section-head"><h2>🏆 Conquistas & Grandes Voltas</h2></div>${trophiesHtml(r)}</div>`;
+
+    html += `<div class="two" style="margin-top:20px"><div>`;
+
+    // NOVIDADE: Radar de Habilidades Hexagonal em SVG
+    if (Object.keys(r.specialties || {}).length) {
+      html += `<div class="section"><div class="section-head"><h2>📊 Perfil de Atributos (Radar)</h2></div>${radarChartSvg(r.specialties)}</div>`;
+    }
+
+    const res = r.season_results || [];
+    if (res.length) {
+      html += `<div class="section"><h2>Resultados ${YEAR}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>#</th><th>Prova</th><th class="r">km</th></tr></thead><tbody>${res.map(x => {
+        const link = x.race ? (x.part && x.part.startsWith("stage") && x.stages ? raceLink(x.race, x.year, x.label) : raceLink(x.race, x.year, x.label)) : esc(x.label);
+        const main = `<tr><td class="muted">${esc(x.date)}</td><td class="rank">${esc(x.result || "")}</td><td>${link}</td><td class="r">${esc(x.distance_km || "")}</td></tr>`;
+        const st = (x.stages || []).map(s => `<tr class="small"><td class="muted">${esc(s.date || "")}</td><td>${esc(s.result || "")}</td><td style="padding-left:24px"><a href="#/etapa/${esc(s.race)}/${s.year}/${esc(s.part)}">${esc(s.label)}</a>${s.jersey ? ` <span class="jersey j-gc" style="background:${esc(s.jersey)}"></span>` : ""}</td><td class="r">${esc(s.distance_km || "")}</td></tr>`).join("");
+        return main + st;
+      }).join("")}</tbody></table></div></div>`;
+    }
+
+    html += `</div><div>`;
+    if ((r.top_results || []).length) html += `<div class="section"><h2>Palmarés</h2><div class="panel">${r.top_results.map(t => `<div style="padding:6px 0;border-bottom:1px solid #20252f"><b class="muted">${esc(t.count || "")}</b> ${esc(t.text)}</div>`).join("")}</div></div>`;
+    if ((r.teams || []).length) html += `<div class="section"><h2>Equipas</h2><div class="panel">${r.teams.map(t => `<div style="padding:5px 0"><span class="muted">${esc(t.season)}</span> ${teamLink(t.team, t.name)} <span class="tag">${esc(t.level || "")}</span></div>`).join("")}</div></div>`;
+    if ((r.pcs_ranking_by_season || []).length) html += `<div class="section"><h2>Ranking por Época</h2><div class="panel">${r.pcs_ranking_by_season.map(s => `<div style="display:flex;justify-content:space-between;padding:4px 0"><span>${s.season}</span><span class="muted">${s.points ?? ""} pts</span><b>${s.rank ?? ""}.º</b></div>`).join("")}</div></div>`;
+    html += `</div></div>`;
+
     app.innerHTML = html;
   }
 
