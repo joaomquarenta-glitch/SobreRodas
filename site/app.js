@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 6: Live Countdown, Vento & Equipas) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Modo Defeso & Contagem 2027) */
 (() => {
   "use strict";
 
@@ -55,7 +55,7 @@
 
       /* Relógio de Contagem Decrescente */
       .countdown-clock { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-      .cd-item { background: rgba(0,0,0,0.35); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; text-align: center; min-width: 58px; }
+      .cd-item { background: rgba(0,0,0,0.4); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; text-align: center; min-width: 58px; }
       .cd-num { font-family: var(--head); font-size: 26px; font-weight: 900; color: var(--accent); line-height: 1; }
       .cd-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
       .cd-sep { font-family: var(--head); font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
@@ -63,6 +63,9 @@
       /* Widget de Meteorologia & Vento */
       .weather-card { background: linear-gradient(135deg, #1a2232, #101520); border: 1px solid rgba(100,150,255,0.25); border-radius: 14px; padding: 18px; margin: 18px 0; }
       .wind-compass { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line); }
+
+      .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
+      @media (max-width: 768px) { .swipe-hint { display: block; } }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
@@ -247,13 +250,12 @@
       else document.body.prepend(wrap);
     }
     const news = [
-      `⚡ <b>PRÓXIMA PROVA:</b> Veneto Classic em contagem decrescente`,
-      `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira no pelotão mundial`,
-      `🏆 <b>RANKING PCS:</b> Tadej Pogačar lidera a época com mais de 11.000 pontos`,
-      `⚔️ <b>NOVO:</b> Experimenta o comparador no menu Duelo de Ciclistas!`,
-      `🎮 <b>PALPITES:</b> Aposta no teu pódio e sobe de nível no pelotão!`,
-      `📡 <b>TRANSMISSÕES:</b> Acompanha as clássicas nos canais Eurosport e Max`,
-      `⭐ <b>FAVORITOS:</b> Carrega na estrela para seguir ciclistas`
+      `🏁 <b>TEMPORADA ${YEAR}:</b> Época concluída! O pelotão entra em estágio de pré-época`,
+      `🇦🇺 <b>NOVA ÉPOCA:</b> Contagem decrescente para o Tour Down Under ${YEAR + 1}`,
+      `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira preparam a nova temporada`,
+      `🏆 <b>RANKING FINAL:</b> Tadej Pogačar fecha o ano como número 1 mundial indiscutível`,
+      `⚔️ <b>DUELO:</b> Compara os rivais e os palmarés no menu Duelo de Ciclistas`,
+      `⭐ <b>FAVORITOS:</b> Escolhe os teus ciclistas favoritos para acompanhar na nova época`
     ];
     const content = news.map(n => `<span class="ticker-item">${n}</span>`).join(" · ");
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
@@ -395,7 +397,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div>
           <h2 style="margin:0 0 4px;font-size:22px">🎮 Liga de Palpites: Escolhe o teu Pódio</h2>
-          <span class="muted small">Aposta nos 3 primeiros lugares antes da partida e soma pontos!</span>
+          <span class="muted small">Aposta nos 3 primeiros lugares e descobre quantos pontos somas!</span>
         </div>
         ${hasResults ? `<span class="tag done">Corrida Terminada</span>` : isLocked ? `<span class="tag done">🔒 Palpite Gravado</span>` : `<span class="tag wt">Palpites Abertos</span>`}
       </div>
@@ -403,7 +405,7 @@
       <div class="predict-slots" id="predict-form">
         <div class="predict-slot gold">
           <b style="color:#ffd60a">🥇 1.º Lugar (Vencedor)</b>
-          <select id="pick-1" ${hasResults ? "disabled" : ""}>
+          <select id="pick-1">
             <option value="">-- Escolhe o Vencedor --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p1 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
@@ -411,7 +413,7 @@
 
         <div class="predict-slot silver">
           <b style="color:#cbd5e1">🥈 2.º Lugar</b>
-          <select id="pick-2" ${hasResults ? "disabled" : ""}>
+          <select id="pick-2">
             <option value="">-- Escolhe o 2.º --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p2 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
@@ -419,19 +421,18 @@
 
         <div class="predict-slot bronze">
           <b style="color:#d97706">🥉 3.º Lugar</b>
-          <select id="pick-3" ${hasResults ? "disabled" : ""}>
+          <select id="pick-3">
             <option value="">-- Escolhe o 3.º --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p3 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
         </div>
       </div>
 
-      ${!hasResults ? `
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
-          <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
-          <button class="btn ghost" id="btn-share-race" style="font-size:13px">📤 Desafiar Amigos</button>
-          <span class="muted small" id="pick-feedback"></span>
-        </div>` : ""}
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+        <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
+        <button class="btn ghost" id="btn-share-race" style="font-size:13px">📤 Desafiar Amigos</button>
+        <span class="muted small" id="pick-feedback"></span>
+      </div>
 
       ${scoreHtml}
     </div>`;
@@ -476,11 +477,10 @@
     }
   }
 
-  // ------------------------------------------------------------ 🎮 HUB CENTRAL DE PALPITES & CARREIRA
+  // ------------------------------------------------------------ 🎮 HUB CENTRAL DE PALPITES
   async function viewPredictionsHub() {
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith("sobrerodas:picks:"));
     let totalScore = 0;
-    let totalBets = allKeys.length;
     allKeys.forEach(() => { totalScore += 25; });
 
     const levels = [
@@ -709,7 +709,7 @@
     </a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA INICIAL (COM CONTAGEM REGRESSIVA AO VIVO)
+  // ------------------------------------------------------------ PÁGINA INICIAL COM MODO DEFESO
   let countdownTimer = null;
   async function viewHome() {
     clearInterval(countdownTimer);
@@ -723,12 +723,27 @@
     const races = (cal && cal.races) || [];
     const liveRaces = (live && live.date === TODAY && live.races) || [];
     const next = races.filter(r => r.start > TODAY).slice(0, 8);
-    const done = races.filter(r => (r.end || r.start) < TODAY).slice(-8).reverse();
+    const done = races.filter(r => (r.end || r.start) <= TODAY).slice(-8).reverse();
     const big = ["giro-d-italia", "tour-de-france", "vuelta-a-espana", "volta-a-portugal"];
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
-    const nextRace = next[0];
+
+    // Se a temporada de 2026 já encerrou (fim de Outubro), aponta a contagem para a abertura de 2027!
+    let nextRace = next[0];
+    let isSeasonOver = false;
+    if (!nextRace) {
+      isSeasonOver = true;
+      nextRace = {
+        name: "Santos Tour Down Under 2027",
+        start: `${YEAR + 1}-01-19`,
+        end: `${YEAR + 1}-01-24`,
+        country: "au",
+        class: "2.UWT",
+        year: YEAR + 1,
+        slug: "tour-down-under"
+      };
+    }
 
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
@@ -741,30 +756,32 @@
       </div>
       ${await topPeloton()}</section>`;
 
-    // NOVIDADE FASE 6: Relógio de Contagem Regressiva Ao Vivo
-    if (nextRace && nextRace.start) {
-      html += `<section class="section">
-        <div class="panel" style="background:linear-gradient(135deg,#151c2a,#0f131c);border:1px solid rgba(255,214,10,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:20px">
-          <div>
-            <span class="tag live" style="background:var(--accent);color:#111">PRÓXIMA GRANDE PROVA</span>
-            <h2 style="margin:8px 0 4px;font-size:26px">${flag(nextRace.country)}${esc(cleanName(nextRace.name))} ${nextRace.year || YEAR}</h2>
-            <div class="muted small">${fmtRange(nextRace.start, nextRace.end)} · ${classTag(nextRace.class)}</div>
-          </div>
-          <div>
-            <div class="countdown-clock" id="live-countdown">
-              <div class="cd-item"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">Dias</div></div>
-              <span class="cd-sep">:</span>
-              <div class="cd-item"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">Horas</div></div>
-              <span class="cd-sep">:</span>
-              <div class="cd-item"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
-              <span class="cd-sep">:</span>
-              <div class="cd-item"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
-            </div>
-          </div>
-          <a class="btn" href="#/prova/${esc(nextRace.slug)}/${nextRace.year || YEAR}">Fazer Palpite & Ver Percurso →</a>
+    // RELÓGIO DE CONTAGEM REGRESSIVA (SEMPRE ATIVO)
+    html += `<section class="section">
+      <div class="panel" style="background:linear-gradient(135deg,#151c2a,#0f131c);border:1px solid rgba(255,214,10,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:22px">
+        <div>
+          <span class="tag live" style="background:${isSeasonOver ? '#ff4fa3' : 'var(--accent)'};color:${isSeasonOver ? '#fff' : '#111'}">
+            ${isSeasonOver ? "🏁 TEMPORADA CONCLUÍDA · DEFESO" : "PRÓXIMA GRANDE PROVA"}
+          </span>
+          <h2 style="margin:8px 0 4px;font-size:26px">${flag(nextRace.country)}${esc(cleanName(nextRace.name))}</h2>
+          <div class="muted small">${isSeasonOver ? "Abertura oficial do WorldTour de 2027 na Austrália" : fmtRange(nextRace.start, nextRace.end)} · ${classTag(nextRace.class)}</div>
         </div>
-      </section>`;
-    }
+        <div>
+          <div class="countdown-clock" id="live-countdown">
+            <div class="cd-item"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">Dias</div></div>
+            <span class="cd-sep">:</span>
+            <div class="cd-item"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">Horas</div></div>
+            <span class="cd-sep">:</span>
+            <div class="cd-item"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
+            <span class="cd-sep">:</span>
+            <div class="cd-item"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
+          </div>
+        </div>
+        <a class="btn" href="${isSeasonOver ? '#/calendario' : `#/prova/${esc(nextRace.slug)}/${nextRace.year}`}">
+          ${isSeasonOver ? "Ver Calendário Histórico →" : "Fazer Palpite & Percurso →"}
+        </a>
+      </div>
+    </section>`;
 
     if (liveRaces.length) {
       html += `<section class="section"><div class="section-head"><h2>Hoje na estrada</h2></div><div class="grid">${liveRaces.map(l => `
@@ -808,34 +825,32 @@
     }
 
     if (next.length) html += `<section class="section"><div class="section-head"><h2>A seguir</h2><a class="muted" href="#/calendario">Calendário completo →</a></div><div class="grid">${next.map(raceCard).join("")}</div></section>`;
-    if (done.length) html += `<section class="section"><div class="section-head"><h2>Últimos resultados</h2></div><div class="grid">${done.map(raceCard).join("")}</div></section>`;
+    if (done.length) html += `<section class="section"><div class="section-head"><h2>Últimos Vencedores de ${YEAR}</h2></div><div class="grid">${done.map(raceCard).join("")}</div></section>`;
     app.innerHTML = html;
     setUpdated(meta);
 
     // Ativar o relógio vivo que bate ao segundo
-    if (nextRace && nextRace.start) {
-      const targetDate = new Date(`${nextRace.start}T12:00:00Z`).getTime();
-      const updateClock = () => {
-        const now = Date.now();
-        const diff = Math.max(0, targetDate - now);
-        const d = Math.floor(diff / 86400000);
-        const h = Math.floor((diff % 86400000) / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
+    const targetDate = new Date(`${nextRace.start}T06:00:00Z`).getTime();
+    const updateClock = () => {
+      const now = Date.now();
+      const diff = Math.max(0, targetDate - now);
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
 
-        const elD = document.getElementById("cd-d");
-        const elH = document.getElementById("cd-h");
-        const elM = document.getElementById("cd-m");
-        const elS = document.getElementById("cd-s");
+      const elD = document.getElementById("cd-d");
+      const elH = document.getElementById("cd-h");
+      const elM = document.getElementById("cd-m");
+      const elS = document.getElementById("cd-s");
 
-        if (elD) elD.textContent = String(d).padStart(2, "0");
-        if (elH) elH.textContent = String(h).padStart(2, "0");
-        if (elM) elM.textContent = String(m).padStart(2, "0");
-        if (elS) elS.textContent = String(s).padStart(2, "0");
-      };
-      updateClock();
-      countdownTimer = setInterval(updateClock, 1000);
-    }
+      if (elD) elD.textContent = String(d).padStart(2, "0");
+      if (elH) elH.textContent = String(h).padStart(2, "0");
+      if (elM) elM.textContent = String(m).padStart(2, "0");
+      if (elS) elS.textContent = String(s).padStart(2, "0");
+    };
+    updateClock();
+    countdownTimer = setInterval(updateClock, 1000);
   }
 
   function raceCard(r) {
@@ -847,7 +862,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA (COM CLIMA & VENTO)
+  // ------------------------------------------------------------ PÁGINA DA PROVA (COM METEOROLOGIA E VENTO)
   async function viewRace(slug, year) {
     clearInterval(countdownTimer);
     year = Number(year);
@@ -889,14 +904,14 @@
       </div>
     </div>`;
 
-    // NOVIDADE FASE 6: Widget de Meteorologia & Vento Tático
+    // BLOCO DE METEOROLOGIA & VENTO TÁCTICO
     html += `<div class="weather-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-size:28px">⛅</span>
           <div>
-            <b style="font-size:15px">Meteorologia & Condições na Meta</b>
-            <div class="muted small">18°C · Poucas Nuvens · Probabilidade de Chuva: 15%</div>
+            <b style="font-size:15px">Condições Meteorológicas na Meta</b>
+            <div class="muted small">${race.info && race.info.avg_temp_c ? `${race.info.avg_temp_c}°C` : "19°C"} · Céu Limpo / Sol · 10% Probabilidade de Chuva</div>
           </div>
         </div>
         <div class="wind-compass">
@@ -1236,7 +1251,7 @@
     app.innerHTML = html;
   }
 
-  // ------------------------------------------------------------ EQUIPAS (COM PLANTEL TÁCTICO)
+  // ------------------------------------------------------------ EQUIPAS (COM PLANTEL TÁTICO)
   async function viewTeams(year) {
     clearInterval(countdownTimer);
     year = Number(year) || YEAR;
@@ -1264,7 +1279,6 @@
         <h2>Plantel Tático</h2>
         <span class="muted small">${riders.length} Atletas</span>
       </div>
-      <!-- Filtros rápidos do plantel -->
       <div class="tabs" id="team-filter" style="margin-bottom:14px">
         <button class="on" data-k="all">Todos (${riders.length})</button>
         <button data-k="pt">🇵🇹 Portugueses</button>
