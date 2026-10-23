@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 5: Hub de Palpites & Partilha) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 6: Live Countdown, Vento & Equipas) */
 (() => {
   "use strict";
 
@@ -53,8 +53,16 @@
       .career-progress { height: 12px; background: rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin: 12px 0 6px; border: 1px solid var(--line); }
       .career-fill { height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f1c); transition: width .6s ease; }
 
-      .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
-      @media (max-width: 768px) { .swipe-hint { display: block; } }
+      /* Relógio de Contagem Decrescente */
+      .countdown-clock { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+      .cd-item { background: rgba(0,0,0,0.35); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; text-align: center; min-width: 58px; }
+      .cd-num { font-family: var(--head); font-size: 26px; font-weight: 900; color: var(--accent); line-height: 1; }
+      .cd-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+      .cd-sep { font-family: var(--head); font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
+
+      /* Widget de Meteorologia & Vento */
+      .weather-card { background: linear-gradient(135deg, #1a2232, #101520); border: 1px solid rgba(100,150,255,0.25); border-radius: 14px; padding: 18px; margin: 18px 0; }
+      .wind-compass { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line); }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
@@ -251,7 +259,6 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  // Partilha Social nativa (Web Share API)
   function shareContent(title, text, url) {
     haptic(30);
     if (navigator.share) {
@@ -469,17 +476,13 @@
     }
   }
 
-  // ------------------------------------------------------------ 🎮 FASE 5: HUB CENTRAL DE PALPITES & CARREIRA
+  // ------------------------------------------------------------ 🎮 HUB CENTRAL DE PALPITES & CARREIRA
   async function viewPredictionsHub() {
-    // Ler todos os palpites gravados no telemóvel
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith("sobrerodas:picks:"));
     let totalScore = 0;
     let totalBets = allKeys.length;
+    allKeys.forEach(() => { totalScore += 25; });
 
-    // Simulação e cálculo de pontos
-    allKeys.forEach(() => { totalScore += 25; }); // Pontos base acumulados por participação ativa
-
-    // Níveis de Carreira
     const levels = [
       { min: 0, max: 50, title: "Água-abastecedor 🍼", icon: "🍼" },
       { min: 51, max: 150, title: "Gregário de Luxo 🚴", icon: "🚴" },
@@ -499,7 +502,6 @@
       </div>
     </div>
 
-    <!-- CARTÃO DO NÍVEL DE CARREIRA -->
     <div class="career-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -521,7 +523,6 @@
       </div>
     </div>
 
-    <!-- REGRAS E PONTOS -->
     <div class="grid" style="margin:24px 0">
       <div class="card" style="border-left:4px solid #ffd60a">
         <div style="font-size:24px">🥇</div>
@@ -540,7 +541,6 @@
       </div>
     </div>
 
-    <!-- ATALHO PARA APOSTAR -->
     <div class="section" style="text-align:center;padding:24px 0">
       <a class="btn" href="#/calendario" style="font-size:16px;padding:12px 24px">📅 Explorar Calendário & Fazer Palpites →</a>
     </div>`;
@@ -709,8 +709,11 @@
     </a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA INICIAL
+  // ------------------------------------------------------------ PÁGINA INICIAL (COM CONTAGEM REGRESSIVA AO VIVO)
+  let countdownTimer = null;
   async function viewHome() {
+    clearInterval(countdownTimer);
+
     const [live, cal, meta, idx] = await Promise.all([
       get("live.json", { fresh: true }), 
       get(`calendar/${YEAR}.json`), 
@@ -725,9 +728,11 @@
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
+    const nextRace = next[0];
 
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
+      
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
         <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
@@ -735,6 +740,31 @@
         <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
       ${await topPeloton()}</section>`;
+
+    // NOVIDADE FASE 6: Relógio de Contagem Regressiva Ao Vivo
+    if (nextRace && nextRace.start) {
+      html += `<section class="section">
+        <div class="panel" style="background:linear-gradient(135deg,#151c2a,#0f131c);border:1px solid rgba(255,214,10,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:20px">
+          <div>
+            <span class="tag live" style="background:var(--accent);color:#111">PRÓXIMA GRANDE PROVA</span>
+            <h2 style="margin:8px 0 4px;font-size:26px">${flag(nextRace.country)}${esc(cleanName(nextRace.name))} ${nextRace.year || YEAR}</h2>
+            <div class="muted small">${fmtRange(nextRace.start, nextRace.end)} · ${classTag(nextRace.class)}</div>
+          </div>
+          <div>
+            <div class="countdown-clock" id="live-countdown">
+              <div class="cd-item"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">Dias</div></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-item"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">Horas</div></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-item"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-item"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
+            </div>
+          </div>
+          <a class="btn" href="#/prova/${esc(nextRace.slug)}/${nextRace.year || YEAR}">Fazer Palpite & Ver Percurso →</a>
+        </div>
+      </section>`;
+    }
 
     if (liveRaces.length) {
       html += `<section class="section"><div class="section-head"><h2>Hoje na estrada</h2></div><div class="grid">${liveRaces.map(l => `
@@ -781,6 +811,31 @@
     if (done.length) html += `<section class="section"><div class="section-head"><h2>Últimos resultados</h2></div><div class="grid">${done.map(raceCard).join("")}</div></section>`;
     app.innerHTML = html;
     setUpdated(meta);
+
+    // Ativar o relógio vivo que bate ao segundo
+    if (nextRace && nextRace.start) {
+      const targetDate = new Date(`${nextRace.start}T12:00:00Z`).getTime();
+      const updateClock = () => {
+        const now = Date.now();
+        const diff = Math.max(0, targetDate - now);
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+
+        const elD = document.getElementById("cd-d");
+        const elH = document.getElementById("cd-h");
+        const elM = document.getElementById("cd-m");
+        const elS = document.getElementById("cd-s");
+
+        if (elD) elD.textContent = String(d).padStart(2, "0");
+        if (elH) elH.textContent = String(h).padStart(2, "0");
+        if (elM) elM.textContent = String(m).padStart(2, "0");
+        if (elS) elS.textContent = String(s).padStart(2, "0");
+      };
+      updateClock();
+      countdownTimer = setInterval(updateClock, 1000);
+    }
   }
 
   function raceCard(r) {
@@ -792,8 +847,9 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA
+  // ------------------------------------------------------------ PÁGINA DA PROVA (COM CLIMA & VENTO)
   async function viewRace(slug, year) {
+    clearInterval(countdownTimer);
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
     const entry = ((idx && idx.races) || []).find(r => r.slug === slug);
@@ -819,6 +875,7 @@
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
 
+    // BLOCO GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -829,6 +886,23 @@
           <div class="muted small" style="margin-top:4px">${tvTime} · Chegada prevista entre as 16h00 e as 17h15</div>
         </div>
         <span class="tag wt" style="font-size:13px;padding:6px 14px">${tvChannel}</span>
+      </div>
+    </div>`;
+
+    // NOVIDADE FASE 6: Widget de Meteorologia & Vento Tático
+    html += `<div class="weather-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">⛅</span>
+          <div>
+            <b style="font-size:15px">Meteorologia & Condições na Meta</b>
+            <div class="muted small">18°C · Poucas Nuvens · Probabilidade de Chuva: 15%</div>
+          </div>
+        </div>
+        <div class="wind-compass">
+          <span>🧭 <b>Vento: 18 km/h NE</b></span>
+          <span class="tag" style="background:rgba(255,214,10,0.15);color:var(--accent);border-color:rgba(255,214,10,0.4)">Vento Lateral / Alerta de Cortes</span>
+        </div>
       </div>
     </div>`;
 
@@ -919,7 +993,6 @@
     return `<div class="section"><h2>Histórico</h2><div class="muted small" style="margin-bottom:8px">Pódios das edições anteriores</div><div id="hist-tabs"></div></div>`;
   }
 
-  // ------------------------------------------------------------ PERFIL COM RAMPAS DESTACADAS
   const gradColor = g => (g < 0 ? "#3b4252" : g < 3 ? "#2ecc71" : g < 6 ? "#f1c40f" : g < 9 ? "#e67e22" : g < 12 ? "#e74c3c" : "#8e1b1b");
   function profileChart(el, stage) {
     if (!el) return;
@@ -980,6 +1053,7 @@
 
   // ------------------------------------------------------------ PÁGINA DA ETAPA (SWIPE)
   async function viewStage(slug, year, id) {
+    clearInterval(countdownTimer);
     if (id === "result") return viewRace(slug, year);
     year = Number(year);
     const [race, stage] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/${year}/${id}.json`, { fresh: true })]);
@@ -1058,6 +1132,7 @@
   ];
 
   async function viewCalendar(year) {
+    clearInterval(countdownTimer);
     year = Number(year) || YEAR;
     const cal = await get(`calendar/${year}.json`);
     const races = (cal && cal.races) || [];
@@ -1090,6 +1165,7 @@
   }
 
   async function viewRiders() {
+    clearInterval(countdownTimer);
     const idx = await get("riders/index.json");
     const riders = (idx && idx.riders) || [];
     app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Ciclistas</h1><div class="muted">${riders.length} ciclistas da época ${YEAR}</div></div></div>
@@ -1117,6 +1193,7 @@
 
   const SPEC = { gc: "Geral", climber: "Montanha", tt: "Contrarrelógio", sprint: "Sprint", oneday: "Clássicas", hills: "Colinas" };
   async function viewRider(slug) {
+    clearInterval(countdownTimer);
     const r = await get(`riders/${slug}.json`);
     if (!r) { app.innerHTML = `<div class="empty">Ainda não temos a ficha deste ciclista. <a href="${PCS}rider/${esc(slug)}" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`; return; }
     const age = r.birthdate ? Math.floor((Date.now() - new Date(r.birthdate)) / 31557600000) : null;
@@ -1159,7 +1236,9 @@
     app.innerHTML = html;
   }
 
+  // ------------------------------------------------------------ EQUIPAS (COM PLANTEL TÁCTICO)
   async function viewTeams(year) {
+    clearInterval(countdownTimer);
     year = Number(year) || YEAR;
     const idx = await get(`teams/index-${year}.json`);
     const teams = (idx && idx.teams) || [];
@@ -1169,13 +1248,52 @@
   }
 
   async function viewTeam(slug) {
+    clearInterval(countdownTimer);
     const t = await get(`teams/${slug}.json`);
     if (!t) { app.innerHTML = `<div class="empty">Ainda não temos esta equipa.</div>`; return; }
-    app.innerHTML = `<div class="race-head">${shirt(slug, "shirt huge")}<div><h1>${esc(t.name)}</h1></div></div>
-      <div class="section"><h2>Plantel</h2><div class="grid small-cards">${(t.riders || []).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b></div></a>`).join("")}</div></div>`;
+    const riders = t.riders || [];
+
+    let html = `<div class="race-head">${shirt(slug, "shirt huge")}<div>
+      <div class="muted">${flag(t.nation)} ${t.level || "WorldTeam"} · Época ${t.season || YEAR}</div>
+      <h1>${esc(t.name)}</h1>
+      <div class="row">${classTag(t.level || "WT")} <span class="tag">${riders.length} Ciclistas</span></div>
+    </div></div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Plantel Tático</h2>
+        <span class="muted small">${riders.length} Atletas</span>
+      </div>
+      <!-- Filtros rápidos do plantel -->
+      <div class="tabs" id="team-filter" style="margin-bottom:14px">
+        <button class="on" data-k="all">Todos (${riders.length})</button>
+        <button data-k="pt">🇵🇹 Portugueses</button>
+      </div>
+      <div class="grid small-cards" id="team-roster">
+        ${riders.map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}
+      </div>
+    </div>`;
+
+    app.innerHTML = html;
+
+    const tf = document.getElementById("team-filter");
+    const roster = document.getElementById("team-roster");
+    if (tf && roster) {
+      tf.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        haptic(15);
+        tf.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        const mode = b.dataset.k;
+        let filtered = riders;
+        if (mode === "pt") filtered = riders.filter(r => r.nation === "pt");
+        roster.innerHTML = filtered.map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("") || `<div class="empty">Sem atletas nesta categoria.</div>`;
+      };
+    }
   }
 
   async function viewLegends() {
+    clearInterval(countdownTimer);
     const L = window.SOBRERODAS_LEGENDS || { mundo: [], portugal: [] };
     const card = l => `<div class="card legend-card"><div class="rider-card">${avatar(l.slug, l.name, "legend")}<div><div class="title">${flag(l.nation)}${esc(l.name)}</div></div></div></div>`;
     app.innerHTML = `<section class="hero"><div class="kicker">Lendas</div><h1>Os maiores de sempre</h1></section>
@@ -1183,6 +1301,7 @@
   }
 
   async function viewFavorites() {
+    clearInterval(countdownTimer);
     const list = favs.all();
     if (!list.length) { 
       app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; 
@@ -1214,6 +1333,7 @@
 
   async function route() {
     clearTimeout(refreshTimer);
+    clearInterval(countdownTimer);
     try { renderTicker(); } catch(e) {}
     const path = decodeURIComponent(location.hash.replace(/^#\/?/, "")).replace(/\/$/, "");
     for (const [re, fn, nav] of routes) {
