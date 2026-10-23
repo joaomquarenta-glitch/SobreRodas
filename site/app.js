@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 3: Liga de Palpites & Gamificação) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 4: Mobile Swipe & Haptics) */
 (() => {
   "use strict";
 
@@ -8,6 +8,13 @@
   const cache = new Map();
   const TODAY = new Date().toISOString().slice(0, 10);
   const YEAR = Number(TODAY.slice(0, 4));
+
+  // Micro-vibração táctil para telemóveis (Haptic Feedback)
+  const haptic = (pattern = 20) => {
+    if ("vibrate" in navigator) {
+      try { navigator.vibrate(pattern); } catch(e) {}
+    }
+  };
 
   // Injetar estilos dinâmicos
   try {
@@ -27,7 +34,6 @@
       .tuga-card { border-left: 3px solid #2ecc71; transition: transform .15s; }
       .tuga-card:hover { transform: translateY(-2px); border-color: var(--accent); }
 
-      /* Estilos do Radar & Troféus */
       .radar-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--panel2); border-radius: 16px; padding: 16px; border: 1px solid var(--line); }
       .trophy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
       .trophy-badge { background: linear-gradient(135deg, rgba(255,214,10,0.1), rgba(20,24,34,0.9)); border: 1px solid rgba(255,214,10,0.35); border-radius: 12px; padding: 12px 10px; text-align: center; }
@@ -35,7 +41,6 @@
       .trophy-badge .count { font-family: var(--head); font-size: 20px; font-weight: 800; color: var(--accent); }
       .trophy-badge .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 
-      /* Estilos dos Palpites (Gamificação) */
       .predict-box { background: linear-gradient(135deg, #182030, #121620); border: 1px solid rgba(255, 214, 10, 0.35); border-radius: 16px; padding: 22px; margin: 20px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
       .predict-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
       .predict-slot { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -43,6 +48,10 @@
       .predict-slot.silver { border-color: #cbd5e1; }
       .predict-slot.bronze { border-color: #d97706; }
       .predict-slot select { width: 100%; }
+
+      /* Dica visual de Swipe no telemóvel */
+      .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
+      @media (max-width: 768px) { .swipe-hint { display: block; } }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
@@ -70,7 +79,6 @@
   }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
-  // Bandeiras nítidas em alta definição
   const flag = cc => {
     if (!cc || cc.length !== 2) return "";
     const code = cc.toLowerCase() === "uk" ? "gb" : cc.toLowerCase();
@@ -144,6 +152,7 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-fav]");
     if (!b) return;
+    haptic(30); // Vibração táctil ao seguir
     const on = favs.toggle({ slug: b.dataset.fav, name: b.dataset.name });
     b.classList.toggle("on", on);
     b.textContent = on ? "★ A seguir" : "☆ Seguir";
@@ -161,6 +170,7 @@
       tabsBar.addEventListener("click", e => {
         const b = e.target.closest("button");
         if (!b) return;
+        haptic(15);
         container.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
         show(b.dataset.k);
       });
@@ -209,7 +219,7 @@
     tabs(el, items, k => classTable(cls[k], k, 25));
     el.onclick = e => {
       const b = e.target.closest(".more-btn");
-      if (b) b.parentElement.innerHTML = classTable(cls[b.dataset.kind], b.dataset.kind);
+      if (b) { haptic(15); b.parentElement.innerHTML = classTable(cls[b.dataset.kind], b.dataset.kind); }
     };
   }
 
@@ -237,7 +247,7 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES EM SVG (SPIDER CHART)
+  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES EM SVG
   function radarChartSvg(specialties, maxVal = 100) {
     const keys = [
       { k: "climber", label: "Montanha", icon: "⛰️" },
@@ -312,13 +322,12 @@
     </div>`;
   }
 
-  // ------------------------------------------------------------ 🎮 FASE 3: LIGA DE PALPITES (PODIUM PREDICTION)
+  // ------------------------------------------------------------ 🎮 LIGA DE PALPITES
   function predictionBoxHtml(race, slug, year) {
     const pickKey = `sobrerodas:picks:${slug}:${year}`;
     let myPicks = { p1: "", p2: "", p3: "" };
     try { myPicks = JSON.parse(localStorage.getItem(pickKey)) || myPicks; } catch(e) {}
 
-    // Lista de ciclistas inscritos para escolher
     let ridersList = [];
     if (race.startlist && race.startlist.length) {
       ridersList = race.startlist.flatMap(t => t.riders || []).filter(r => r && r.rider);
@@ -331,7 +340,6 @@
     const hasResults = race.results && race.results.length >= 3;
     let scoreHtml = "";
 
-    // Se já terminou, calcula a pontuação oficial do palpite
     if (hasResults && (myPicks.p1 || myPicks.p2 || myPicks.p3)) {
       const top3 = race.results.slice(0, 3).map(r => r.rider);
       let pts = 0;
@@ -415,14 +423,17 @@
       const p3 = document.getElementById("pick-3").value;
 
       if (!p1 || !p2 || !p3) {
+        haptic(50);
         document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar!</span>`;
         return;
       }
       if (p1 === p2 || p1 === p3 || p2 === p3) {
+        haptic(50);
         document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Não podes escolher o mesmo ciclista em mais do que um lugar!</span>`;
         return;
       }
 
+      haptic([30, 60, 30]); // Dupla vibração de sucesso tátil!
       const pickKey = `sobrerodas:picks:${slug}:${year}`;
       localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
       document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso!</span>`;
@@ -549,8 +560,8 @@
 
     const sA = document.getElementById("sel-rider-a");
     const sB = document.getElementById("sel-rider-b");
-    if (sA) sA.onchange = e => { location.hash = `#/duelo/${e.target.value}/${slugB}`; };
-    if (sB) sB.onchange = e => { location.hash = `#/duelo/${slugA}/${e.target.value}`; };
+    if (sA) sA.onchange = e => { haptic(15); location.hash = `#/duelo/${e.target.value}/${slugB}`; };
+    if (sB) sB.onchange = e => { haptic(15); location.hash = `#/duelo/${slugA}/${e.target.value}`; };
   }
 
   // ------------------------------------------------------------ GRANDES VOLTAS PERSONALIZADAS
@@ -592,12 +603,15 @@
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
+    const nextRaceSlug = (next[0] && next[0].slug) || "veneto-classic";
+    const nextRaceYear = (next[0] && next[0].year) || YEAR;
 
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
         <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
+        <a class="btn" href="#/prova/${esc(nextRaceSlug)}/${nextRaceYear}" style="background:#2ecc71;color:#042310">🎮 Palpites da Corrida</a>
         <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
       ${await topPeloton()}</section>`;
@@ -658,7 +672,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA (COM PALPITES & GUIA TV)
+  // ------------------------------------------------------------ PÁGINA DA PROVA
   async function viewRace(slug, year) {
     year = Number(year);
     const [race, hist, idx] = await Promise.all([get(`races/${slug}/${year}.json`), get(`races/${slug}/history.json`), get("races/index.json")]);
@@ -685,7 +699,6 @@
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
 
-    // BLOCO DE GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -699,7 +712,6 @@
       </div>
     </div>`;
 
-    // NOVIDADE FASE 3: Caixa da Liga de Palpites
     html += predictionBoxHtml(race, slug, year);
 
     if (race.stage_race) {
@@ -732,7 +744,6 @@
     const rYear = document.getElementById("race-year");
     if (rYear) rYear.onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     
-    // Ativar lógica dos palpites
     wirePredictions(slug, year);
 
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
@@ -846,6 +857,7 @@
 
   function intermediateBlock(list) { return ""; }
 
+  // ------------------------------------------------------------ PÁGINA DA ETAPA (COM GESTOS SWIPE DE TOQUE)
   async function viewStage(slug, year, id) {
     if (id === "result") return viewRace(slug, year);
     year = Number(year);
@@ -854,20 +866,41 @@
     const stages = (race && race.stages) || [];
     const i = stages.findIndex(s => s.id === id);
     const prev = stages[i - 1], next = stages[i + 1];
+
     let html = `<div class="race-head"><div>
       <div class="muted">${raceLink(slug, year, `${race ? cleanName(race.name) : slug} ${year}`)} · ${fmtDate(stage.date)}</div>
       <h1>Etapa ${stage.number ?? ""}${stage.type ? ` (${esc(stage.type)})` : ""}</h1><h3 class="muted">${esc(stage.route || "")}</h3></div>
-      <div style="margin-left:auto;display:flex;gap:6px">${prev ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${prev.id}">←</a>` : ""}${next ? `<a class="btn ghost" href="#/etapa/${slug}/${year}/${next.id}">→</a>` : ""}</div></div>`;
+      <div style="margin-left:auto;display:flex;gap:6px">
+        ${prev ? `<a class="btn ghost" id="btn-prev-stage" href="#/etapa/${slug}/${year}/${prev.id}">← Etapa ${prev.number ?? ""}</a>` : ""}
+        ${next ? `<a class="btn ghost" id="btn-next-stage" href="#/etapa/${slug}/${year}/${next.id}">Etapa ${next.number ?? ""} →</a>` : ""}
+      </div></div>
+      <div class="swipe-hint">👈 Desliza para o lado no telemóvel para mudar de etapa 👉</div>`;
+    
     html += factsHtml(stage.info || {});
     html += `<div class="section"><h2>Perfil</h2><div id="profile"></div></div><div class="section"><h2>Classificações</h2><div id="cls"></div></div>`;
     app.innerHTML = html;
     profileChart(document.getElementById("profile"), stage);
     classificationTabs(document.getElementById("cls"), stage.classifications || {});
+
+    // Deteção de Swipe no ecrã do telemóvel
+    let touchStartX = 0;
+    app.ontouchstart = e => { touchStartX = e.changedTouches[0].screenX; };
+    app.ontouchend = e => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+      if (diff < -65 && next) {
+        haptic(25);
+        location.hash = `#/etapa/${slug}/${year}/${next.id}`; // Deslizar para a esquerda -> Próxima etapa
+      } else if (diff > 65 && prev) {
+        haptic(25);
+        location.hash = `#/etapa/${slug}/${year}/${prev.id}`; // Deslizar para a direita -> Etapa anterior
+      }
+    };
   }
 
   function liveBox(live, doneLabel) { return ""; }
   function wireMore(el, rows, kind) {
-    if (el) el.onclick = e => { const b = e.target.closest(".more-btn"); if (b) el.innerHTML = classTable(rows, kind); };
+    if (el) el.onclick = e => { haptic(15); const b = e.target.closest(".more-btn"); if (b) el.innerHTML = classTable(rows, kind); };
   }
 
   const LANES = [[91, 40], [81, 24], [73, 50], [63, 30], [56, 54], [48, 20], [40, 44], [32, 28], [23, 52], [13, 34]];
@@ -928,6 +961,7 @@
     if (cF) {
       cF.onclick = e => {
         const b = e.target.closest("button"); if (!b) return;
+        haptic(15);
         document.querySelectorAll("#cal-f button").forEach(x => x.classList.toggle("on", x === b));
         render(b.dataset.k);
       };
@@ -956,7 +990,7 @@
     if (q) q.oninput = render;
     const rF = document.getElementById("rf");
     if (rF) {
-      rF.onclick = e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.k; document.querySelectorAll("#rf button").forEach(x => x.classList.toggle("on", x === b)); render(); };
+      rF.onclick = e => { const b = e.target.closest("button"); if (!b) return; haptic(15); mode = b.dataset.k; document.querySelectorAll("#rf button").forEach(x => x.classList.toggle("on", x === b)); render(); };
     }
     render();
   }
