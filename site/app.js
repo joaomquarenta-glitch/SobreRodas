@@ -1,3 +1,14 @@
+O seu print mostrou exatamente o que está a acontecer: você selecionou com o
+rato a minha conversa ("Percebi exatamente...") e colou essa conversa dentro do
+ficheiro no GitHub!
+
+Em programação, se colar português normal no ficheiro, o site dá logo erro.
+
+Para não acontecer mais, NÃO use o rato para arrastar texto. Passe o rato por
+cima do retângulo preto de código abaixo e clique apenas no botão "Copy"
+(Copiar) que aparece no cantinho superior direito.
+
+/* SOBRERODAS - CODIGO OFICIAL COMPLETO (site/app.js) */
 (() => {
   "use strict";
 
@@ -1748,6 +1759,126 @@
     app.innerHTML = html;
   }
 
+  async function viewTeams(year) {
+    clearInterval(countdownTimer);
+    year = Number(year) || YEAR;
+    const idx = await get(`teams/index-${year}.json`);
+    const teams = (idx && idx.teams) || [];
+    let mode = "all";
+
+    let html = `${await topPeloton({ compact: true })}<div class="race-head">
+      <div>
+        <div class="kicker">PELOTAO PROFISSIONAL</div>
+        <h1>EQUIPAS ${year}</h1>
+        <div class="muted">${teams.length} equipas registadas na epoca</div>
+      </div>
+    </div>
+
+    <div class="tabs" id="teams-cat-filter" style="margin-bottom:18px">
+      <button class="on" data-k="all">Todas as Equipas (${teams.length})</button>
+      <button data-k="wt">WorldTeams</button>
+      <button data-k="pt">Portugal</button>
+    </div>
+
+    <div class="grid small-cards" id="teams-grid"></div>`;
+
+    app.innerHTML = html;
+
+    const grid = document.getElementById("teams-grid");
+    const tcf = document.getElementById("teams-cat-filter");
+
+    const render = () => {
+      let filtered = teams;
+      if (mode === "wt") filtered = filtered.filter(t => (t.level || "").toUpperCase() === "WT");
+      else if (mode === "pt") filtered = filtered.filter(t => t.nation === "pt");
+
+      grid.innerHTML = filtered.map(t => {
+        const gear = TEAM_GEAR[t.slug];
+        return `
+          <a class="card team-card" href="#/equipa/${esc(t.slug)}" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              ${shirt(t.slug, "shirt big")}
+              <div style="min-width:0;flex:1">
+                <b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${flag(t.nation)}${esc(t.name)}</b>
+                <div class="muted small">${t.level || "Equipa"} · ${t.riders || ""} ciclistas</div>
+              </div>
+            </div>
+            ${gear ? `<div class="tag" style="font-size:10px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1)">🚲 ${gear.bike}</div>` : ""}
+          </a>
+        `;
+      }).join("") || `<div class="empty">Sem equipas nesta categoria.</div>`;
+    };
+
+    if (tcf) {
+      tcf.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        haptic(15);
+        tcf.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        mode = b.dataset.k;
+        render();
+      };
+    }
+
+    render();
+  }
+
+  async function viewTeam(slug) {
+    clearInterval(countdownTimer);
+    const t = await get(`teams/${slug}.json`);
+    if (!t) { app.innerHTML = `<div class="empty">Ainda nao temos esta equipa.</div>`; return; }
+    const riders = t.riders || [];
+    const gear = TEAM_GEAR[slug] || (t.gear && { bike: t.gear.Bike, groupset: t.gear.Groupset, wheels: t.gear.Wheels }) || {};
+
+    let html = `<div class="race-head">${shirt(slug, "shirt huge")}<div>
+      <div class="muted">${flag(t.nation)} ${t.level || "WorldTeam"} · Epoca ${t.season || YEAR}</div>
+      <h1>${esc(t.name)}</h1>
+      <div class="row">${classTag(t.level || "WT")} <span class="tag">${riders.length} Ciclistas</span></div>
+    </div></div>`;
+
+    if (gear.bike) {
+      html += `<div class="panel" style="background:linear-gradient(135deg,rgba(255,214,10,0.08),rgba(20,24,34,0.95));border:1px solid rgba(255,214,10,0.3);padding:18px;margin:18px 0">
+        <h3 style="margin:0 0 10px;font-size:18px">🚲 Bicicleta & Material</h3>
+        <div style="display:flex;gap:18px;flex-wrap:wrap">
+          <div><span class="muted small">QUADRO:</span> <b style="color:var(--accent)">${gear.bike}</b></div>
+          ${gear.groupset ? `<div><span class="muted small">GRUPO:</span> <b>${gear.groupset}</b></div>` : ""}
+          ${gear.wheels ? `<div><span class="muted small">RODAS:</span> <b>${gear.wheels}</b></div>` : ""}
+        </div>
+      </div>`;
+    }
+
+    html += `<div class="section">
+      <div class="section-head">
+        <h2>Plantel da Equipa</h2>
+        <span class="muted small">${riders.length} Atletas</span>
+      </div>
+      <div class="tabs" id="team-filter" style="margin-bottom:14px">
+        <button class="on" data-k="all">Todos (${riders.length})</button>
+        <button data-k="pt">Portugueses</button>
+      </div>
+      <div class="grid small-cards" id="team-roster">
+        ${riders.map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}
+      </div>
+    </div>`;
+
+    app.innerHTML = html;
+
+    const tf = document.getElementById("team-filter");
+    const roster = document.getElementById("team-roster");
+    if (tf && roster) {
+      tf.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        haptic(15);
+        tf.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        const mode = b.dataset.k;
+        let filtered = riders;
+        if (mode === "pt") filtered = riders.filter(r => r.nation === "pt");
+        roster.innerHTML = filtered.map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("") || `<div class="empty">Sem atletas nesta categoria.</div>`;
+      };
+    }
+  }
+
   async function viewFavorites() {
     clearInterval(countdownTimer);
     const list = favs.all();
@@ -1784,7 +1915,6 @@
     clearTimeout(refreshTimer);
     clearInterval(countdownTimer);
     try { renderTicker(); } catch(e) {}
-    setupUpdateChecker();
 
     const path = decodeURIComponent(location.hash.replace(/^#\/?/, "")).replace(/\/$/, "");
     for (const [re, fn, nav] of routes) {
