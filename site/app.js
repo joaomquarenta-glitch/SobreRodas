@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 4: Mobile Swipe & Haptics) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Fase 5: Hub de Palpites & Partilha) */
 (() => {
   "use strict";
 
@@ -49,7 +49,10 @@
       .predict-slot.bronze { border-color: #d97706; }
       .predict-slot select { width: 100%; }
 
-      /* Dica visual de Swipe no telemóvel */
+      .career-card { background: linear-gradient(135deg, #1e2638, #111520); border: 1px solid rgba(255,214,10,0.4); border-radius: 18px; padding: 24px; margin: 20px 0; }
+      .career-progress { height: 12px; background: rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin: 12px 0 6px; border: 1px solid var(--line); }
+      .career-fill { height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f1c); transition: width .6s ease; }
+
       .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
       @media (max-width: 768px) { .swipe-hint { display: block; } }
     `;
@@ -79,6 +82,7 @@
   }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
+  // Bandeiras nítidas em alta definição
   const flag = cc => {
     if (!cc || cc.length !== 2) return "";
     const code = cc.toLowerCase() === "uk" ? "gb" : cc.toLowerCase();
@@ -152,7 +156,7 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-fav]");
     if (!b) return;
-    haptic(30); // Vibração táctil ao seguir
+    haptic(30);
     const on = favs.toggle({ slug: b.dataset.fav, name: b.dataset.name });
     b.classList.toggle("on", on);
     b.textContent = on ? "★ A seguir" : "☆ Seguir";
@@ -239,7 +243,7 @@
       `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira no pelotão mundial`,
       `🏆 <b>RANKING PCS:</b> Tadej Pogačar lidera a época com mais de 11.000 pontos`,
       `⚔️ <b>NOVO:</b> Experimenta o comparador no menu Duelo de Ciclistas!`,
-      `🎮 <b>PALPITES:</b> Escolhe o teu pódio nas provas e ganha pontos`,
+      `🎮 <b>PALPITES:</b> Aposta no teu pódio e sobe de nível no pelotão!`,
       `📡 <b>TRANSMISSÕES:</b> Acompanha as clássicas nos canais Eurosport e Max`,
       `⭐ <b>FAVORITOS:</b> Carrega na estrela para seguir ciclistas`
     ];
@@ -247,7 +251,18 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES EM SVG
+  // Partilha Social nativa (Web Share API)
+  function shareContent(title, text, url) {
+    haptic(30);
+    if (navigator.share) {
+      navigator.share({ title, text, url: url || location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url || location.href);
+      alert("Link copiado para a área de transferência!");
+    }
+  }
+
+  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES
   function radarChartSvg(specialties, maxVal = 100) {
     const keys = [
       { k: "climber", label: "Montanha", icon: "⛰️" },
@@ -322,7 +337,7 @@
     </div>`;
   }
 
-  // ------------------------------------------------------------ 🎮 LIGA DE PALPITES
+  // ------------------------------------------------------------ 🎮 LIGA DE PALPITES NA CORRIDA
   function predictionBoxHtml(race, slug, year) {
     const pickKey = `sobrerodas:picks:${slug}:${year}`;
     let myPicks = { p1: "", p2: "", p3: "" };
@@ -405,8 +420,9 @@
       </div>
 
       ${!hasResults ? `
-        <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
           <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
+          <button class="btn ghost" id="btn-share-race" style="font-size:13px">📤 Desafiar Amigos</button>
           <span class="muted small" id="pick-feedback"></span>
         </div>` : ""}
 
@@ -414,31 +430,122 @@
     </div>`;
   }
 
-  function wirePredictions(slug, year) {
+  function wirePredictions(slug, year, raceName) {
     const btn = document.getElementById("btn-save-picks");
-    if (!btn) return;
-    btn.onclick = () => {
-      const p1 = document.getElementById("pick-1").value;
-      const p2 = document.getElementById("pick-2").value;
-      const p3 = document.getElementById("pick-3").value;
+    if (btn) {
+      btn.onclick = () => {
+        const p1 = document.getElementById("pick-1").value;
+        const p2 = document.getElementById("pick-2").value;
+        const p3 = document.getElementById("pick-3").value;
 
-      if (!p1 || !p2 || !p3) {
-        haptic(50);
-        document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar!</span>`;
-        return;
-      }
-      if (p1 === p2 || p1 === p3 || p2 === p3) {
-        haptic(50);
-        document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Não podes escolher o mesmo ciclista em mais do que um lugar!</span>`;
-        return;
-      }
+        if (!p1 || !p2 || !p3) {
+          haptic(50);
+          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar!</span>`;
+          return;
+        }
+        if (p1 === p2 || p1 === p3 || p2 === p3) {
+          haptic(50);
+          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Não podes escolher o mesmo ciclista em mais do que um lugar!</span>`;
+          return;
+        }
 
-      haptic([30, 60, 30]); // Dupla vibração de sucesso tátil!
-      const pickKey = `sobrerodas:picks:${slug}:${year}`;
-      localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
-      document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso!</span>`;
-      setTimeout(() => viewRace(slug, year), 600);
-    };
+        haptic([30, 60, 30]);
+        const pickKey = `sobrerodas:picks:${slug}:${year}`;
+        localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
+        document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso!</span>`;
+        setTimeout(() => viewRace(slug, year), 600);
+      };
+    }
+
+    const shareBtn = document.getElementById("btn-share-race");
+    if (shareBtn) {
+      shareBtn.onclick = () => {
+        shareContent(
+          `Palpites para ${raceName || 'Ciclismo'}!`,
+          `Quem achas que vai ganhar a corrida? Deixa o teu palpite no SobreRodas:`,
+          location.href
+        );
+      };
+    }
+  }
+
+  // ------------------------------------------------------------ 🎮 FASE 5: HUB CENTRAL DE PALPITES & CARREIRA
+  async function viewPredictionsHub() {
+    // Ler todos os palpites gravados no telemóvel
+    const allKeys = Object.keys(localStorage).filter(k => k.startsWith("sobrerodas:picks:"));
+    let totalScore = 0;
+    let totalBets = allKeys.length;
+
+    // Simulação e cálculo de pontos
+    allKeys.forEach(() => { totalScore += 25; }); // Pontos base acumulados por participação ativa
+
+    // Níveis de Carreira
+    const levels = [
+      { min: 0, max: 50, title: "Água-abastecedor 🍼", icon: "🍼" },
+      { min: 51, max: 150, title: "Gregário de Luxo 🚴", icon: "🚴" },
+      { min: 151, max: 300, title: "Caçador de Etapas ⚡", icon: "⚡" },
+      { min: 301, max: 500, title: "Chefe de Fila 👑", icon: "👑" },
+      { min: 501, max: 9999, title: "Campeão do Mundo 🌈", icon: "🌈" }
+    ];
+
+    const currentLevel = levels.find(l => totalScore >= l.min && totalScore <= l.max) || levels[0];
+    const progressPct = Math.min(100, Math.round((totalScore / (currentLevel.max || 100)) * 100));
+
+    let html = `<div class="race-head">
+      <div>
+        <div class="kicker">🎮 LIGA DE PALPITES</div>
+        <h1>A TUA CARREIRA NO PELOTÃO</h1>
+        <p class="muted">Aposta nas corridas do calendário, acerta nos vencedores e sobe de estatuto no ciclismo mundial.</p>
+      </div>
+    </div>
+
+    <!-- CARTÃO DO NÍVEL DE CARREIRA -->
+    <div class="career-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <span class="muted small" style="text-transform:uppercase;letter-spacing:1px">Estatuto Atual</span>
+          <h2 style="margin:4px 0;font-size:32px;color:var(--accent)">${currentLevel.title}</h2>
+        </div>
+        <div style="text-align:right">
+          <span class="muted small" style="text-transform:uppercase;letter-spacing:1px">Pontuação Total</span>
+          <div style="font-family:var(--head);font-size:42px;font-weight:900;color:#fff">${totalScore} <span style="font-size:20px;color:var(--accent)">PTS</span></div>
+        </div>
+      </div>
+
+      <div class="career-progress">
+        <div class="career-fill" style="width:${progressPct}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+        <span>${totalScore} pts</span>
+        <span>Próximo nível aos ${currentLevel.max} pts</span>
+      </div>
+    </div>
+
+    <!-- REGRAS E PONTOS -->
+    <div class="grid" style="margin:24px 0">
+      <div class="card" style="border-left:4px solid #ffd60a">
+        <div style="font-size:24px">🥇</div>
+        <div class="title">Acertar no Vencedor</div>
+        <div class="muted small"><b>+25 Pontos</b> se o teu palpite ganhar a corrida ou etapa.</div>
+      </div>
+      <div class="card" style="border-left:4px solid #cbd5e1">
+        <div style="font-size:24px">🥈</div>
+        <div class="title">Acertar no 2.º Lugar</div>
+        <div class="muted small"><b>+15 Pontos</b> para o segundo classificado oficial.</div>
+      </div>
+      <div class="card" style="border-left:4px solid #d97706">
+        <div style="font-size:24px">🥉</div>
+        <div class="title">Acertar no 3.º Lugar</div>
+        <div class="muted small"><b>+10 Pontos</b> para o fecho do pódio.</div>
+      </div>
+    </div>
+
+    <!-- ATALHO PARA APOSTAR -->
+    <div class="section" style="text-align:center;padding:24px 0">
+      <a class="btn" href="#/calendario" style="font-size:16px;padding:12px 24px">📅 Explorar Calendário & Fazer Palpites →</a>
+    </div>`;
+
+    app.innerHTML = html;
   }
 
   // ------------------------------------------------------------ ⚔️ DUELO DE CICLISTAS
@@ -554,6 +661,10 @@
       ${compareRow("Vitórias Profissionais", (rA.stats && rA.stats.wins && rA.stats.wins.value) || 0, (rB.stats && rB.stats.wins && rB.stats.wins.value) || 0)}
       ${compareRow("Grandes Voltas", (rA.stats && rA.stats.grand_tours && rA.stats.grand_tours.value) || 0, (rB.stats && rB.stats.grand_tours && rB.stats.grand_tours.value) || 0)}
       ${compareRow("Clássicas / Monumentos", (rA.stats && rA.stats.classics && rA.stats.classics.value) || 0, (rB.stats && rB.stats.classics && rB.stats.classics.value) || 0)}
+    
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn ghost" id="btn-share-duelo">📤 Partilhar este Duelo com Amigos</button>
+      </div>
     </div>`;
 
     app.innerHTML = html;
@@ -562,6 +673,17 @@
     const sB = document.getElementById("sel-rider-b");
     if (sA) sA.onchange = e => { haptic(15); location.hash = `#/duelo/${e.target.value}/${slugB}`; };
     if (sB) sB.onchange = e => { haptic(15); location.hash = `#/duelo/${slugA}/${e.target.value}`; };
+
+    const shareBtn = document.getElementById("btn-share-duelo");
+    if (shareBtn) {
+      shareBtn.onclick = () => {
+        shareContent(
+          `Duelo: ${rA.name} vs ${rB.name}`,
+          `Quem é o melhor ciclista? Vê o confronto direto de estatísticas:`,
+          location.href
+        );
+      };
+    }
   }
 
   // ------------------------------------------------------------ GRANDES VOLTAS PERSONALIZADAS
@@ -603,15 +725,13 @@
     const bigRaces = big.map(s => races.find(r => r.slug === s)).filter(Boolean);
     
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
-    const nextRaceSlug = (next[0] && next[0].slug) || "veneto-classic";
-    const nextRaceYear = (next[0] && next[0].year) || YEAR;
 
     let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
         <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
-        <a class="btn" href="#/prova/${esc(nextRaceSlug)}/${nextRaceYear}" style="background:#2ecc71;color:#042310">🎮 Palpites da Corrida</a>
+        <a class="btn" href="#/palpites" style="background:#2ecc71;color:#042310">🎮 Liga de Palpites</a>
         <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
       ${await topPeloton()}</section>`;
@@ -630,7 +750,7 @@
       html += `<section class="section">
         <div class="section-head">
           <h2>Grandes Voltas & Monumentos</h2>
-          <span class="muted small">As provas mais prestigiadas e exigentes da temporada</span>
+          <span class="muted small">As provas mais prestigiadas da temporada</span>
         </div>
         <div class="grid">${bigRaces.map(grandTourCard).join("")}</div>
       </section>`;
@@ -744,7 +864,7 @@
     const rYear = document.getElementById("race-year");
     if (rYear) rYear.onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     
-    wirePredictions(slug, year);
+    wirePredictions(slug, year, cleanName(race.name));
 
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
     else {
@@ -799,6 +919,7 @@
     return `<div class="section"><h2>Histórico</h2><div class="muted small" style="margin-bottom:8px">Pódios das edições anteriores</div><div id="hist-tabs"></div></div>`;
   }
 
+  // ------------------------------------------------------------ PERFIL COM RAMPAS DESTACADAS
   const gradColor = g => (g < 0 ? "#3b4252" : g < 3 ? "#2ecc71" : g < 6 ? "#f1c40f" : g < 9 ? "#e67e22" : g < 12 ? "#e74c3c" : "#8e1b1b");
   function profileChart(el, stage) {
     if (!el) return;
@@ -857,7 +978,7 @@
 
   function intermediateBlock(list) { return ""; }
 
-  // ------------------------------------------------------------ PÁGINA DA ETAPA (COM GESTOS SWIPE DE TOQUE)
+  // ------------------------------------------------------------ PÁGINA DA ETAPA (SWIPE)
   async function viewStage(slug, year, id) {
     if (id === "result") return viewRace(slug, year);
     year = Number(year);
@@ -882,7 +1003,6 @@
     profileChart(document.getElementById("profile"), stage);
     classificationTabs(document.getElementById("cls"), stage.classifications || {});
 
-    // Deteção de Swipe no ecrã do telemóvel
     let touchStartX = 0;
     app.ontouchstart = e => { touchStartX = e.changedTouches[0].screenX; };
     app.ontouchend = e => {
@@ -890,10 +1010,10 @@
       const diff = touchEndX - touchStartX;
       if (diff < -65 && next) {
         haptic(25);
-        location.hash = `#/etapa/${slug}/${year}/${next.id}`; // Deslizar para a esquerda -> Próxima etapa
+        location.hash = `#/etapa/${slug}/${year}/${next.id}`;
       } else if (diff > 65 && prev) {
         haptic(25);
-        location.hash = `#/etapa/${slug}/${year}/${prev.id}`; // Deslizar para a direita -> Etapa anterior
+        location.hash = `#/etapa/${slug}/${year}/${prev.id}`;
       }
     };
   }
@@ -1088,6 +1208,7 @@
     [/^lendas$/, viewLegends, "lendas"],
     [/^favoritos$/, viewFavorites, "favoritos"],
     [/^duelo(?:\/([^/]+))?(?:\/([^/]+))?$/, viewVersus, "duelo"],
+    [/^palpites$/, viewPredictionsHub, "palpites"],
     [/^app$/, () => { location.hash = "#/"; }, ""],
   ];
 
