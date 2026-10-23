@@ -1,13 +1,3 @@
-O seu print mostrou exatamente o que está a acontecer: você selecionou com o
-rato a minha conversa ("Percebi exatamente...") e colou essa conversa dentro do
-ficheiro no GitHub!
-
-Em programação, se colar português normal no ficheiro, o site dá logo erro.
-
-Para não acontecer mais, NÃO use o rato para arrastar texto. Passe o rato por
-cima do retângulo preto de código abaixo e clique apenas no botão "Copy"
-(Copiar) que aparece no cantinho superior direito.
-
 /* SOBRERODAS - CODIGO OFICIAL COMPLETO (site/app.js) */
 (() => {
   "use strict";
