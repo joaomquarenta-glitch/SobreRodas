@@ -1,30 +1,3 @@
-Percebi exatamente o que aconteceu!
-
-Quando fez copiar, o seu navegador/rato selecionou também o texto das instruções
-que eu tinha colocado no fim da mensagem ("4. Grave no GitHub... 5. Em 15
-segundos...") e esse texto colou-se dentro do seu ficheiro app.js no GitHub!
-
-Para isso nunca mais acontecer, mudei a forma de responder:
-
-1.  Toda a conversa e instruções ficam aqui em cima.
-2.  O bloco de código abaixo é a ÚLTIMA COISA desta mensagem. Não há mais
-    nenhuma palavra, número ou frase por baixo dele!
-3.  No bloco preto abaixo, passe o rato no canto superior direito e clique
-    apenas no botão Copy (Copiar).
-
-Instruções:
-
-1.  Abra:
-    https://github.com/joaomquarenta-glitch/SobreRodas/edit/main/site/app.js
-2.  No teclado: Ctrl + A e depois Delete (apaga tudo para a caixa ficar em
-    branco).
-3.  Copie o bloco de código abaixo (usando o botão Copy no canto superior do
-    bloco) e cole com Ctrl + V.
-4.  Clique no botão verde "Commit changes..." e confirme.
-
-(Abaixo só existe código de programação puro. Começa em (() => { e termina em
-})(); sem mais nada).
-
 (() => {
   "use strict";
 
