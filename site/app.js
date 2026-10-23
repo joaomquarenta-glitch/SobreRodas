@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Modo Defeso & Contagem 2027) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Mercado de Transferências) */
 (() => {
   "use strict";
 
@@ -53,16 +53,24 @@
       .career-progress { height: 12px; background: rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin: 12px 0 6px; border: 1px solid var(--line); }
       .career-fill { height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f1c); transition: width .6s ease; }
 
-      /* Relógio de Contagem Decrescente */
       .countdown-clock { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
       .cd-item { background: rgba(0,0,0,0.4); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; text-align: center; min-width: 58px; }
       .cd-num { font-family: var(--head); font-size: 26px; font-weight: 900; color: var(--accent); line-height: 1; }
       .cd-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
       .cd-sep { font-family: var(--head); font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
 
-      /* Widget de Meteorologia & Vento */
       .weather-card { background: linear-gradient(135deg, #1a2232, #101520); border: 1px solid rgba(100,150,255,0.25); border-radius: 14px; padding: 18px; margin: 18px 0; }
       .wind-compass { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line); }
+
+      /* Estilos do Mercado de Transferências */
+      .transfer-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; transition: transform .2s, border-color .2s; }
+      .transfer-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.25); }
+      .transfer-route { display: flex; align-items: center; justify-content: space-between; background: var(--panel2); border-radius: 12px; padding: 12px 14px; margin: 12px 0 6px; border: 1px solid rgba(255,255,255,0.05); }
+      .transfer-team { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+      .transfer-arrow { font-size: 18px; color: var(--accent); font-weight: 900; padding: 0 8px; }
+      .tag.official { background: rgba(46,204,113,0.15); color: #2ecc71; border-color: rgba(46,204,113,0.35); }
+      .tag.rumor { background: rgba(241,196,15,0.15); color: #f1c40f; border-color: rgba(241,196,15,0.35); }
+      .tag.retired { background: rgba(231,76,60,0.15); color: #e74c3c; border-color: rgba(231,76,60,0.35); }
 
       .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
       @media (max-width: 768px) { .swipe-hint { display: block; } }
@@ -93,7 +101,6 @@
   }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
-  // Bandeiras nítidas em alta definição
   const flag = cc => {
     if (!cc || cc.length !== 2) return "";
     const code = cc.toLowerCase() === "uk" ? "gb" : cc.toLowerCase();
@@ -250,12 +257,12 @@
       else document.body.prepend(wrap);
     }
     const news = [
+      `🔥 <b>MERCADO:</b> Todas as novidades, contratações e rumores para ${YEAR + 1}`,
       `🏁 <b>TEMPORADA ${YEAR}:</b> Época concluída! O pelotão entra em estágio de pré-época`,
       `🇦🇺 <b>NOVA ÉPOCA:</b> Contagem decrescente para o Tour Down Under ${YEAR + 1}`,
-      `🇵🇹 <b>PORTUGAL:</b> João Almeida, Rui Costa e Nelson Oliveira preparam a nova temporada`,
+      `🇵🇹 <b>PORTUGAL:</b> João Almeida e António Morgado preparam a nova época na UAE`,
       `🏆 <b>RANKING FINAL:</b> Tadej Pogačar fecha o ano como número 1 mundial indiscutível`,
-      `⚔️ <b>DUELO:</b> Compara os rivais e os palmarés no menu Duelo de Ciclistas`,
-      `⭐ <b>FAVORITOS:</b> Escolhe os teus ciclistas favoritos para acompanhar na nova época`
+      `⚔️ <b>DUELO:</b> Compara os rivais e os palmarés no menu Duelo de Ciclistas`
     ];
     const content = news.map(n => `<span class="ticker-item">${n}</span>`).join(" · ");
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
@@ -344,6 +351,177 @@
       <div class="trophy-badge"><span class="icon">🪨</span><div class="count">${classics}</div><div class="lbl">Monumentos</div></div>
       <div class="trophy-badge"><span class="icon">🌈</span><div class="count">${champs}</div><div class="lbl">Campeonatos</div></div>
     </div>`;
+  }
+
+  // ------------------------------------------------------------ 🔥 MERCADO DE TRANSFERÊNCIAS
+  const TRANSFERS_DATA = [
+    {
+      rider: "julian-alaphilippe", name: "Julian Alaphilippe", nation: "fr",
+      from_team: "soudal-quick-step", from_name: "Soudal Quick-Step",
+      to_team: "tudor-pro-cycling-team", to_name: "Tudor Pro Cycling",
+      status: "official", years: "2027 – 2029", highlight: true, note: "A grande contratação do projeto de Fabian Cancellara!"
+    },
+    {
+      rider: "antonio-morgado", name: "António Morgado", nation: "pt",
+      from_team: "uae-team-emirates", from_name: "UAE Team Emirates",
+      to_team: "uae-team-emirates", to_name: "UAE Team Emirates",
+      status: "official", years: "Renovação até 2030", highlight: true, note: "Contrato de longa duração blindado pela formação árabe!"
+    },
+    {
+      rider: "marc-hirschi", name: "Marc Hirschi", nation: "ch",
+      from_team: "uae-team-emirates", from_name: "UAE Team Emirates",
+      to_team: "tudor-pro-cycling-team", to_name: "Tudor Pro Cycling",
+      status: "official", years: "2027 – 2029", highlight: false
+    },
+    {
+      rider: "jhonatan-narvaez", name: "Jhonatan Narváez", nation: "ec",
+      from_team: "ineos-grenadiers", from_name: "INEOS Grenadiers",
+      to_team: "uae-team-emirates", to_name: "UAE Team Emirates",
+      status: "official", years: "2027 – 2028", highlight: false
+    },
+    {
+      rider: "simon-yates", name: "Simon Yates", nation: "gb",
+      from_team: "team-jayco-alula", from_name: "Team Jayco AlUla",
+      to_team: "team-visma-lease-a-bike", to_name: "Visma-Lease a Bike",
+      status: "official", years: "2027 – 2028", highlight: false
+    },
+    {
+      rider: "afonso-eulalio", name: "Afonso Eulálio", nation: "pt",
+      from_team: "abtf-betao-feirense", from_name: "ABTF Betão Feirense",
+      to_team: "bahrain-victorious", to_name: "Bahrain Victorious",
+      status: "official", years: "2027 – 2028", highlight: true, note: "O jovem talento da Volta a Portugal salta para o WorldTour!"
+    },
+    {
+      rider: "pablo-castrillo", name: "Pablo Castrillo", nation: "es",
+      from_team: "equipo-kern-pharma", from_name: "Equipo Kern Pharma",
+      to_team: "movistar-team", to_name: "Movistar Team",
+      status: "official", years: "2027 – 2029", highlight: false
+    },
+    {
+      rider: "ben-oconnor", name: "Ben O'Connor", nation: "au",
+      from_team: "decathlon-ag2r-la-mondiale-team", from_name: "Decathlon AG2R",
+      to_team: "team-jayco-alula", to_name: "Team Jayco AlUla",
+      status: "official", years: "2027 – 2028", highlight: false
+    },
+    {
+      rider: "joao-almeida", name: "João Almeida", nation: "pt",
+      from_team: "uae-team-emirates", from_name: "UAE Team Emirates",
+      to_team: "uae-team-emirates", to_name: "UAE Team Emirates",
+      status: "official", years: "Contrato até 2028", highlight: false, note: "Chefe de fila consolidado com Tadej Pogačar."
+    },
+    {
+      rider: "mark-cavendish", name: "Mark Cavendish", nation: "gb",
+      from_team: "astana-qazaqstan-team", from_name: "Astana Qazaqstan",
+      to_team: "reforma", to_name: "Fim de Carreira 🏁",
+      status: "retired", years: "35 Etapas no Tour", highlight: true, note: "O maior velocista de todos os tempos pendura a bicicleta!"
+    },
+    {
+      rider: "rigoberto-uran", name: "Rigoberto Urán", nation: "co",
+      from_team: "ef-education-easypost", from_name: "EF Education-EasyPost",
+      to_team: "reforma", to_name: "Fim de Carreira 🏁",
+      status: "retired", years: "18 Épocas Pro", highlight: false, note: "Despedida carismática do pelotão mundial."
+    }
+  ];
+
+  async function viewTransfers() {
+    let mode = "all";
+    const highlight = TRANSFERS_DATA.find(t => t.highlight && t.status === "official");
+
+    let html = `<div class="race-head">
+      <div>
+        <div class="kicker">🔥 MERCADO DE TRANSFERÊNCIAS</div>
+        <h1>MERCADO DO PELOTÃO 2026/2027</h1>
+        <p class="muted">Acompanha em tempo real todas as contratações oficiais, renovações e despedidas do ciclismo mundial.</p>
+      </div>
+    </div>
+
+    <!-- BOMBA DO MERCADO EM DESTAQUE -->
+    ${highlight ? `
+      <div class="panel" style="background:linear-gradient(135deg, rgba(255, 77, 77, 0.12), rgba(20, 24, 34, 0.95));border:1px solid rgba(255, 77, 77, 0.35);padding:22px;margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <span class="tag live" style="background:#ff4d4d;color:#fff">BOMBA DO MERCADO 🔥</span>
+          <span class="muted small">${highlight.years}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          ${avatar(highlight.rider, highlight.name, "big")}
+          <div>
+            <h2 style="margin:0 0 6px;font-size:28px">${flag(highlight.nation)}${esc(highlight.name)}</h2>
+            <div class="muted small">${highlight.note || ""}</div>
+            <div class="transfer-route" style="margin-top:10px">
+              <span class="transfer-team">${shirt(highlight.from_team)}${highlight.from_name}</span>
+              <span class="transfer-arrow">➔</span>
+              <span class="transfer-team" style="color:var(--accent)">${shirt(highlight.to_team)}${highlight.to_name}</span>
+            </div>
+          </div>
+        </div>
+      </div>` : ""}
+
+    <!-- FILTROS DO MERCADO -->
+    <div class="tabs" id="tr-filter" style="margin-bottom:18px">
+      <button class="on" data-k="all">Todas (${TRANSFERS_DATA.length})</button>
+      <button data-k="pt">🇵🇹 Portugueses</button>
+      <button data-k="official">🟢 Oficiais</button>
+      <button data-k="retired">🏁 Fim de Carreira</button>
+    </div>
+
+    <!-- GRELHA DE TRANSFERÊNCIAS -->
+    <div class="grid" id="tr-list"></div>`;
+
+    app.innerHTML = html;
+
+    const list = document.getElementById("tr-list");
+    const tf = document.getElementById("tr-filter");
+
+    const render = () => {
+      let filtered = TRANSFERS_DATA;
+      if (mode === "pt") filtered = filtered.filter(t => t.nation === "pt");
+      else if (mode === "official") filtered = filtered.filter(t => t.status === "official");
+      else if (mode === "retired") filtered = filtered.filter(t => t.status === "retired");
+
+      list.innerHTML = filtered.map(t => `
+        <div class="transfer-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="tag ${t.status === 'official' ? 'official' : t.status === 'retired' ? 'retired' : 'rumor'}">
+              ${t.status === 'official' ? 'OFICIAL ✔' : t.status === 'retired' ? 'FIM DE CARREIRA 🏁' : 'RUMOR ⚠️'}
+            </span>
+            <span class="muted small" style="font-size:11px">${t.years}</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;margin:10px 0">
+            ${avatar(t.rider, t.name)}
+            <div>
+              <b style="font-size:16px">${flag(t.nation)}${esc(t.name)}</b>
+              ${t.note ? `<div class="muted small" style="font-size:11px">${esc(t.note)}</div>` : ""}
+            </div>
+          </div>
+
+          <div class="transfer-route">
+            <div class="transfer-team">${shirt(t.from_team)}${esc(t.from_name)}</div>
+            <div class="transfer-arrow">➔</div>
+            <div class="transfer-team" style="${t.status === 'retired' ? 'color:#ff6b6b' : 'color:var(--accent)'}">
+              ${t.to_team !== 'reforma' ? shirt(t.to_team) : ''}${esc(t.to_name)}
+            </div>
+          </div>
+
+          <div style="margin-top:10px;text-align:right">
+            ${t.rider ? `<a class="muted small" href="#/ciclista/${esc(t.rider)}">Ver Ficha Completa →</a>` : ""}
+          </div>
+        </div>
+      `).join("") || `<div class="empty">Sem transferências nesta categoria.</div>`;
+    };
+
+    if (tf) {
+      tf.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        haptic(15);
+        tf.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        mode = b.dataset.k;
+        render();
+      };
+    }
+
+    render();
   }
 
   // ------------------------------------------------------------ 🎮 LIGA DE PALPITES NA CORRIDA
@@ -729,7 +907,6 @@
     
     const tugas = ((idx && idx.riders) || []).filter(r => r.nation === "pt").slice(0, 8);
 
-    // Se a temporada de 2026 já encerrou (fim de Outubro), aponta a contagem para a abertura de 2027!
     let nextRace = next[0];
     let isSeasonOver = false;
     if (!nextRace) {
@@ -750,13 +927,14 @@
       
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
+        <a class="btn" href="#/transferencias" style="background:linear-gradient(135deg,#ff4d4d,#f39c12);color:#fff;box-shadow:0 4px 14px rgba(255,77,77,0.3)">🔥 Transferências</a>
         <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
         <a class="btn" href="#/palpites" style="background:#2ecc71;color:#042310">🎮 Liga de Palpites</a>
         <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
       ${await topPeloton()}</section>`;
 
-    // RELÓGIO DE CONTAGEM REGRESSIVA (SEMPRE ATIVO)
+    // RELÓGIO DE CONTAGEM REGRESSIVA
     html += `<section class="section">
       <div class="panel" style="background:linear-gradient(135deg,#151c2a,#0f131c);border:1px solid rgba(255,214,10,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:22px">
         <div>
@@ -777,8 +955,8 @@
             <div class="cd-item"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Seg</div></div>
           </div>
         </div>
-        <a class="btn" href="${isSeasonOver ? '#/calendario' : `#/prova/${esc(nextRace.slug)}/${nextRace.year}`}">
-          ${isSeasonOver ? "Ver Calendário Histórico →" : "Fazer Palpite & Percurso →"}
+        <a class="btn" href="${isSeasonOver ? '#/transferencias' : `#/prova/${esc(nextRace.slug)}/${nextRace.year}`}">
+          ${isSeasonOver ? "Ver Mercado de Transferências 🔥" : "Fazer Palpite & Percurso →"}
         </a>
       </div>
     </section>`;
@@ -829,7 +1007,6 @@
     app.innerHTML = html;
     setUpdated(meta);
 
-    // Ativar o relógio vivo que bate ao segundo
     const targetDate = new Date(`${nextRace.start}T06:00:00Z`).getTime();
     const updateClock = () => {
       const now = Date.now();
@@ -862,7 +1039,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA (COM METEOROLOGIA E VENTO)
+  // ------------------------------------------------------------ PÁGINA DA PROVA
   async function viewRace(slug, year) {
     clearInterval(countdownTimer);
     year = Number(year);
@@ -890,7 +1067,6 @@
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
 
-    // BLOCO GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -904,7 +1080,6 @@
       </div>
     </div>`;
 
-    // BLOCO DE METEOROLOGIA & VENTO TÁCTICO
     html += `<div class="weather-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div style="display:flex;align-items:center;gap:12px">
@@ -1251,7 +1426,7 @@
     app.innerHTML = html;
   }
 
-  // ------------------------------------------------------------ EQUIPAS (COM PLANTEL TÁTICO)
+  // ------------------------------------------------------------ EQUIPAS
   async function viewTeams(year) {
     clearInterval(countdownTimer);
     year = Number(year) || YEAR;
@@ -1342,6 +1517,7 @@
     [/^favoritos$/, viewFavorites, "favoritos"],
     [/^duelo(?:\/([^/]+))?(?:\/([^/]+))?$/, viewVersus, "duelo"],
     [/^palpites$/, viewPredictionsHub, "palpites"],
+    [/^transferencias$/, viewTransfers, "transferencias"],
     [/^app$/, () => { location.hash = "#/"; }, ""],
   ];
 
