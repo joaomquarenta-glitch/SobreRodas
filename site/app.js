@@ -1,4 +1,4 @@
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Mercado de Transferências) */
+/* SobreRodas — Plataforma Dinâmica de Ciclismo (Temas das Equipas, Bottom Bar & Confetis) */
 (() => {
   "use strict";
 
@@ -9,14 +9,40 @@
   const TODAY = new Date().toISOString().slice(0, 10);
   const YEAR = Number(TODAY.slice(0, 4));
 
-  // Micro-vibração táctil para telemóveis (Haptic Feedback)
+  // Micro-vibração táctil para telemóveis
   const haptic = (pattern = 20) => {
     if ("vibrate" in navigator) {
       try { navigator.vibrate(pattern); } catch(e) {}
     }
   };
 
-  // Injetar estilos dinâmicos
+  // ------------------------------------------------------------ 🎨 TEMAS DAS EQUIPAS
+  const TEAM_THEMES = {
+    default: { name: "SobreRodas (Amarelo)", accent: "#ffd60a", glow: "rgba(255,214,10,0.25)" },
+    uae: { name: "🇦🇪 UAE Emirates", accent: "#e63946", glow: "rgba(230,57,70,0.3)" },
+    decathlon: { name: "🇫🇷 Decathlon AG2R", accent: "#00d2d3", glow: "rgba(0,210,211,0.3)" },
+    visma: { name: "🇳🇱 Visma-Lease a Bike", accent: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
+    soudal: { name: "🇧🇪 Soudal Quick-Step", accent: "#3b82f6", glow: "rgba(59,130,246,0.3)" },
+    ef: { name: "🇺🇸 EF Education", accent: "#ff4fa3", glow: "rgba(255,79,163,0.3)" },
+    ineos: { name: "🇬🇧 INEOS Grenadiers", accent: "#ea580c", glow: "rgba(234,88,12,0.3)" },
+    pt: { name: "🇵🇹 Portugal / Quinas", accent: "#2ecc71", glow: "rgba(46,204,113,0.3)" }
+  };
+
+  function applyTeamTheme(key) {
+    const t = TEAM_THEMES[key] || TEAM_THEMES.default;
+    document.documentElement.style.setProperty("--accent", t.accent);
+    document.documentElement.style.setProperty("--accent-glow", t.glow);
+    localStorage.setItem("sobrerodas:team_theme", key);
+    haptic(25);
+  }
+
+  // Carregar tema guardado pelo utilizador
+  try {
+    const savedTheme = localStorage.getItem("sobrerodas:team_theme");
+    if (savedTheme && TEAM_THEMES[savedTheme]) applyTeamTheme(savedTheme);
+  } catch(e) {}
+
+  // Injetar estilos dinâmicos (Barra Mobile, Temas, Confetis)
   try {
     const dynamicStyles = document.createElement("style");
     dynamicStyles.textContent = `
@@ -44,9 +70,6 @@
       .predict-box { background: linear-gradient(135deg, #182030, #121620); border: 1px solid rgba(255, 214, 10, 0.35); border-radius: 16px; padding: 22px; margin: 20px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
       .predict-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
       .predict-slot { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-      .predict-slot.gold { border-color: #ffd60a; }
-      .predict-slot.silver { border-color: #cbd5e1; }
-      .predict-slot.bronze { border-color: #d97706; }
       .predict-slot select { width: 100%; }
 
       .career-card { background: linear-gradient(135deg, #1e2638, #111520); border: 1px solid rgba(255,214,10,0.4); border-radius: 18px; padding: 24px; margin: 20px 0; }
@@ -62,21 +85,101 @@
       .weather-card { background: linear-gradient(135deg, #1a2232, #101520); border: 1px solid rgba(100,150,255,0.25); border-radius: 14px; padding: 18px; margin: 18px 0; }
       .wind-compass { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line); }
 
-      /* Estilos do Mercado de Transferências */
       .transfer-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; transition: transform .2s, border-color .2s; }
       .transfer-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.25); }
       .transfer-route { display: flex; align-items: center; justify-content: space-between; background: var(--panel2); border-radius: 12px; padding: 12px 14px; margin: 12px 0 6px; border: 1px solid rgba(255,255,255,0.05); }
       .transfer-team { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
       .transfer-arrow { font-size: 18px; color: var(--accent); font-weight: 900; padding: 0 8px; }
-      .tag.official { background: rgba(46,204,113,0.15); color: #2ecc71; border-color: rgba(46,204,113,0.35); }
-      .tag.rumor { background: rgba(241,196,15,0.15); color: #f1c40f; border-color: rgba(241,196,15,0.35); }
-      .tag.retired { background: rgba(231,76,60,0.15); color: #e74c3c; border-color: rgba(231,76,60,0.35); }
 
-      .swipe-hint { display: none; font-size: 12px; color: var(--muted); text-align: center; margin: 8px 0; }
-      @media (max-width: 768px) { .swipe-hint { display: block; } }
+      /* BARRA DE NAVEGAÇÃO INFERIOR PARA TELEMÓVEL (MOBILE BOTTOM BAR) */
+      .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(14, 18, 26, 0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: 1000; padding: 8px 10px max(10px, env(safe-area-inset-bottom)); justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
+      .mobile-nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; text-decoration: none; padding: 4px 8px; border-radius: 10px; }
+      .mobile-nav a.on, .mobile-nav a:hover { color: var(--accent); }
+      .mobile-nav a span.icon { font-size: 18px; }
+      @media (max-width: 768px) {
+        .mobile-nav { display: flex; }
+        body { padding-bottom: 70px; }
+      }
+
+      /* Canvas de Confetis */
+      #confetti-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99999; }
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
+
+  // ------------------------------------------------------------ 🎉 CONFETIS EM CANVAS PURO
+  function launchConfetti() {
+    let canvas = document.getElementById("confetti-canvas");
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.id = "confetti-canvas";
+      document.body.appendChild(canvas);
+    }
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = [];
+    const colors = ["#ffd60a", "#ff4fa3", "#2ecc71", "#00d2d3", "#ffffff", "#ff4d4d"];
+    for (let i = 0; i < 90; i++) {
+      pieces.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.4,
+        w: Math.random() * 8 + 4,
+        h: Math.random() * 6 + 4,
+        c: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 6,
+        vy: Math.random() * 4 + 3,
+        rot: Math.random() * 360,
+        rSpeed: (Math.random() - 0.5) * 8
+      });
+    }
+
+    let frames = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.rSpeed;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      frames++;
+      if (frames < 90) requestAnimationFrame(draw);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    draw();
+  }
+
+  // ------------------------------------------------------------ 📅 GUARDAR NA AGENDA (.ICS)
+  function downloadRaceCalendar(race, slug, year) {
+    haptic(30);
+    const startDate = (race.start || `${year}-01-01`).replace(/-/g, "");
+    const endDate = (race.end || race.start || `${year}-01-01`).replace(/-/g, "");
+    const icsData = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//SobreRodas//Ciclismo//PT",
+      "BEGIN:VEVENT",
+      `SUMMARY:🚴 ${cleanName(race.name || slug)} ${year}`,
+      `DESCRIPTION:Acompanha a corrida no SobreRodas e na TV (Eurosport / RTP2).`,
+      `DTSTART;VALUE=DATE:${startDate}`,
+      `DTEND;VALUE=DATE:${endDate}`,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${slug}-${year}.ics`;
+    link.click();
+  }
 
   // ------------------------------------------------------------ utilitários
   async function load(path, fresh) {
@@ -245,7 +348,7 @@
     };
   }
 
-  // ------------------------------------------------------------ TICKER DE NOTÍCIAS AO VIVO
+  // ------------------------------------------------------------ TICKER COM SELETOR DE TEMAS
   function renderTicker() {
     let wrap = document.getElementById("sobrerodas-ticker");
     if (!wrap) {
@@ -257,6 +360,7 @@
       else document.body.prepend(wrap);
     }
     const news = [
+      `🎨 <b>EQUIPA FAVORITA:</b> Personaliza as cores da app no topo!`,
       `🔥 <b>MERCADO:</b> Todas as novidades, contratações e rumores para ${YEAR + 1}`,
       `🏁 <b>TEMPORADA ${YEAR}:</b> Época concluída! O pelotão entra em estágio de pré-época`,
       `🇦🇺 <b>NOVA ÉPOCA:</b> Contagem decrescente para o Tour Down Under ${YEAR + 1}`,
@@ -268,89 +372,22 @@
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  function shareContent(title, text, url) {
-    haptic(30);
-    if (navigator.share) {
-      navigator.share({ title, text, url: url || location.href }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url || location.href);
-      alert("Link copiado para a área de transferência!");
+  // ------------------------------------------------------------ BARRA MOBILE INFERIOR (BOTTOM NAV)
+  function renderMobileNav(currentNav) {
+    let bNav = document.getElementById("sobrerodas-mobile-nav");
+    if (!bNav) {
+      bNav = document.createElement("div");
+      bNav.id = "sobrerodas-mobile-nav";
+      bNav.className = "mobile-nav";
+      document.body.appendChild(bNav);
     }
-  }
-
-  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES
-  function radarChartSvg(specialties, maxVal = 100) {
-    const keys = [
-      { k: "climber", label: "Montanha", icon: "⛰️" },
-      { k: "gc", label: "Geral (GC)", icon: "🏆" },
-      { k: "tt", label: "Contrarrelógio", icon: "⏱️" },
-      { k: "sprint", label: "Sprint", icon: "⚡" },
-      { k: "oneday", label: "Clássicas", icon: "🧱" },
-      { k: "hills", label: "Colinas", icon: "🧗" }
-    ];
-
-    const cx = 160, cy = 135, R = 85;
-    const maxSpec = Math.max(1, maxVal, ...Object.values(specialties || {}));
-
-    let rings = "";
-    [0.35, 0.70, 1.0].forEach(level => {
-      const pts = keys.map((_, i) => {
-        const angle = (i * Math.PI / 3) - (Math.PI / 2);
-        return `${(cx + R * level * Math.cos(angle)).toFixed(1)},${(cy + R * level * Math.sin(angle)).toFixed(1)}`;
-      }).join(" ");
-      rings += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>`;
-    });
-
-    let axes = "", labels = "";
-    keys.forEach((item, i) => {
-      const angle = (i * Math.PI / 3) - (Math.PI / 2);
-      const ex = cx + R * Math.cos(angle);
-      const ey = cy + R * Math.sin(angle);
-      axes += `<line x1="${cx}" y1="${cy}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="2 3"/>`;
-
-      const lx = cx + (R + 25) * Math.cos(angle);
-      const ly = cy + (R + 20) * Math.sin(angle);
-      const val = (specialties && specialties[item.k]) || 0;
-      labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="#a6b1c2" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">${item.icon} ${item.label} <tspan fill="var(--accent)" font-weight="800">(${val})</tspan></text>`;
-    });
-
-    const dataPoints = keys.map((item, i) => {
-      const angle = (i * Math.PI / 3) - (Math.PI / 2);
-      const val = (specialties && specialties[item.k]) || 0;
-      const ratio = Math.max(0.12, Math.min(1, val / maxSpec));
-      const px = cx + R * ratio * Math.cos(angle);
-      const py = cy + R * ratio * Math.sin(angle);
-      return `${px.toFixed(1)},${py.toFixed(1)}`;
-    });
-
-    const polygonPts = dataPoints.join(" ");
-    let dots = dataPoints.map(p => {
-      const [px, py] = p.split(",");
-      return `<circle cx="${px}" cy="${py}" r="4" fill="var(--accent)" stroke="#111" stroke-width="1.5"/>`;
-    }).join("");
-
-    return `<div class="radar-wrap">
-      <svg viewBox="0 0 320 270" style="width:100%;max-width:340px;height:auto;display:block">
-        ${rings}${axes}
-        <polygon points="${polygonPts}" fill="rgba(255, 214, 10, 0.22)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
-        ${dots}${labels}
-      </svg>
-    </div>`;
-  }
-
-  function trophiesHtml(r) {
-    const stats = r.stats || {};
-    const wins = (stats.wins && stats.wins.value) || 0;
-    const gts = (stats.grand_tours && stats.grand_tours.value) || 0;
-    const classics = (stats.classics && stats.classics.value) || 0;
-    const champs = (stats.championships && stats.championships.value) || 0;
-
-    return `<div class="trophy-grid">
-      <div class="trophy-badge"><span class="icon">🏆</span><div class="count">${wins}</div><div class="lbl">Vitórias Pro</div></div>
-      <div class="trophy-badge"><span class="icon">🟡</span><div class="count">${gts}</div><div class="lbl">Grandes Voltas</div></div>
-      <div class="trophy-badge"><span class="icon">🪨</span><div class="count">${classics}</div><div class="lbl">Monumentos</div></div>
-      <div class="trophy-badge"><span class="icon">🌈</span><div class="count">${champs}</div><div class="lbl">Campeonatos</div></div>
-    </div>`;
+    bNav.innerHTML = `
+      <a href="#/" class="${currentNav === 'home' ? 'on' : ''}"><span class="icon">🏠</span>Início</a>
+      <a href="#/calendario" class="${currentNav === 'calendario' ? 'on' : ''}"><span class="icon">📅</span>Provas</a>
+      <a href="#/duelo" class="${currentNav === 'duelo' ? 'on' : ''}"><span class="icon">⚔️</span>Duelo</a>
+      <a href="#/transferencias" class="${currentNav === 'transferencias' ? 'on' : ''}"><span class="icon">🔥</span>Mercado</a>
+      <a href="#/palpites" class="${currentNav === 'palpites' ? 'on' : ''}"><span class="icon">🎮</span>Palpites</a>
+    `;
   }
 
   // ------------------------------------------------------------ 🔥 MERCADO DE TRANSFERÊNCIAS
@@ -392,34 +429,10 @@
       status: "official", years: "2027 – 2028", highlight: true, note: "O jovem talento da Volta a Portugal salta para o WorldTour!"
     },
     {
-      rider: "pablo-castrillo", name: "Pablo Castrillo", nation: "es",
-      from_team: "equipo-kern-pharma", from_name: "Equipo Kern Pharma",
-      to_team: "movistar-team", to_name: "Movistar Team",
-      status: "official", years: "2027 – 2029", highlight: false
-    },
-    {
-      rider: "ben-oconnor", name: "Ben O'Connor", nation: "au",
-      from_team: "decathlon-ag2r-la-mondiale-team", from_name: "Decathlon AG2R",
-      to_team: "team-jayco-alula", to_name: "Team Jayco AlUla",
-      status: "official", years: "2027 – 2028", highlight: false
-    },
-    {
-      rider: "joao-almeida", name: "João Almeida", nation: "pt",
-      from_team: "uae-team-emirates", from_name: "UAE Team Emirates",
-      to_team: "uae-team-emirates", to_name: "UAE Team Emirates",
-      status: "official", years: "Contrato até 2028", highlight: false, note: "Chefe de fila consolidado com Tadej Pogačar."
-    },
-    {
       rider: "mark-cavendish", name: "Mark Cavendish", nation: "gb",
       from_team: "astana-qazaqstan-team", from_name: "Astana Qazaqstan",
       to_team: "reforma", to_name: "Fim de Carreira 🏁",
-      status: "retired", years: "35 Etapas no Tour", highlight: true, note: "O maior velocista de todos os tempos pendura a bicicleta!"
-    },
-    {
-      rider: "rigoberto-uran", name: "Rigoberto Urán", nation: "co",
-      from_team: "ef-education-easypost", from_name: "EF Education-EasyPost",
-      to_team: "reforma", to_name: "Fim de Carreira 🏁",
-      status: "retired", years: "18 Épocas Pro", highlight: false, note: "Despedida carismática do pelotão mundial."
+      status: "retired", years: "35 Etapas no Tour", highlight: true, note: "O maior velocista da história pendura a bicicleta!"
     }
   ];
 
@@ -431,11 +444,10 @@
       <div>
         <div class="kicker">🔥 MERCADO DE TRANSFERÊNCIAS</div>
         <h1>MERCADO DO PELOTÃO 2026/2027</h1>
-        <p class="muted">Acompanha em tempo real todas as contratações oficiais, renovações e despedidas do ciclismo mundial.</p>
+        <p class="muted">Acompanha todas as contratações oficiais, renovações e despedidas do ciclismo mundial.</p>
       </div>
     </div>
 
-    <!-- BOMBA DO MERCADO EM DESTAQUE -->
     ${highlight ? `
       <div class="panel" style="background:linear-gradient(135deg, rgba(255, 77, 77, 0.12), rgba(20, 24, 34, 0.95));border:1px solid rgba(255, 77, 77, 0.35);padding:22px;margin-bottom:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -456,7 +468,6 @@
         </div>
       </div>` : ""}
 
-    <!-- FILTROS DO MERCADO -->
     <div class="tabs" id="tr-filter" style="margin-bottom:18px">
       <button class="on" data-k="all">Todas (${TRANSFERS_DATA.length})</button>
       <button data-k="pt">🇵🇹 Portugueses</button>
@@ -464,7 +475,6 @@
       <button data-k="retired">🏁 Fim de Carreira</button>
     </div>
 
-    <!-- GRELHA DE TRANSFERÊNCIAS -->
     <div class="grid" id="tr-list"></div>`;
 
     app.innerHTML = html;
@@ -482,7 +492,7 @@
         <div class="transfer-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <span class="tag ${t.status === 'official' ? 'official' : t.status === 'retired' ? 'retired' : 'rumor'}">
-              ${t.status === 'official' ? 'OFICIAL ✔' : t.status === 'retired' ? 'FIM DE CARREIRA 🏁' : 'RUMOR ⚠️'}
+              ${t.status === 'official' ? 'OFICIAL ✔' : 'FIM DE CARREIRA 🏁'}
             </span>
             <span class="muted small" style="font-size:11px">${t.years}</span>
           </div>
@@ -581,7 +591,7 @@
       </div>
 
       <div class="predict-slots" id="predict-form">
-        <div class="predict-slot gold">
+        <div class="predict-slot">
           <b style="color:#ffd60a">🥇 1.º Lugar (Vencedor)</b>
           <select id="pick-1">
             <option value="">-- Escolhe o Vencedor --</option>
@@ -589,7 +599,7 @@
           </select>
         </div>
 
-        <div class="predict-slot silver">
+        <div class="predict-slot">
           <b style="color:#cbd5e1">🥈 2.º Lugar</b>
           <select id="pick-2">
             <option value="">-- Escolhe o 2.º --</option>
@@ -597,7 +607,7 @@
           </select>
         </div>
 
-        <div class="predict-slot bronze">
+        <div class="predict-slot">
           <b style="color:#d97706">🥉 3.º Lugar</b>
           <select id="pick-3">
             <option value="">-- Escolhe o 3.º --</option>
@@ -608,7 +618,6 @@
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
         <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
-        <button class="btn ghost" id="btn-share-race" style="font-size:13px">📤 Desafiar Amigos</button>
         <span class="muted small" id="pick-feedback"></span>
       </div>
 
@@ -616,7 +625,7 @@
     </div>`;
   }
 
-  function wirePredictions(slug, year, raceName) {
+  function wirePredictions(slug, year) {
     const btn = document.getElementById("btn-save-picks");
     if (btn) {
       btn.onclick = () => {
@@ -635,22 +644,12 @@
           return;
         }
 
-        haptic([30, 60, 30]);
+        haptic([40, 80, 40]);
+        launchConfetti(); // Chuva de confetis ao gravar!
         const pickKey = `sobrerodas:picks:${slug}:${year}`;
         localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
-        document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso!</span>`;
-        setTimeout(() => viewRace(slug, year), 600);
-      };
-    }
-
-    const shareBtn = document.getElementById("btn-share-race");
-    if (shareBtn) {
-      shareBtn.onclick = () => {
-        shareContent(
-          `Palpites para ${raceName || 'Ciclismo'}!`,
-          `Quem achas que vai ganhar a corrida? Deixa o teu palpite no SobreRodas:`,
-          location.href
-        );
+        document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso! 🎉</span>`;
+        setTimeout(() => viewRace(slug, year), 700);
       };
     }
   }
@@ -839,10 +838,6 @@
       ${compareRow("Vitórias Profissionais", (rA.stats && rA.stats.wins && rA.stats.wins.value) || 0, (rB.stats && rB.stats.wins && rB.stats.wins.value) || 0)}
       ${compareRow("Grandes Voltas", (rA.stats && rA.stats.grand_tours && rA.stats.grand_tours.value) || 0, (rB.stats && rB.stats.grand_tours && rB.stats.grand_tours.value) || 0)}
       ${compareRow("Clássicas / Monumentos", (rA.stats && rA.stats.classics && rA.stats.classics.value) || 0, (rB.stats && rB.stats.classics && rB.stats.classics.value) || 0)}
-    
-      <div style="text-align:center;margin-top:20px">
-        <button class="btn ghost" id="btn-share-duelo">📤 Partilhar este Duelo com Amigos</button>
-      </div>
     </div>`;
 
     app.innerHTML = html;
@@ -851,17 +846,6 @@
     const sB = document.getElementById("sel-rider-b");
     if (sA) sA.onchange = e => { haptic(15); location.hash = `#/duelo/${e.target.value}/${slugB}`; };
     if (sB) sB.onchange = e => { haptic(15); location.hash = `#/duelo/${slugA}/${e.target.value}`; };
-
-    const shareBtn = document.getElementById("btn-share-duelo");
-    if (shareBtn) {
-      shareBtn.onclick = () => {
-        shareContent(
-          `Duelo: ${rA.name} vs ${rB.name}`,
-          `Quem é o melhor ciclista? Vê o confronto direto de estatísticas:`,
-          location.href
-        );
-      };
-    }
   }
 
   // ------------------------------------------------------------ GRANDES VOLTAS PERSONALIZADAS
@@ -887,7 +871,7 @@
     </a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA INICIAL COM MODO DEFESO
+  // ------------------------------------------------------------ PÁGINA INICIAL COM SELETOR DE TEMAS DAS EQUIPAS
   let countdownTimer = null;
   async function viewHome() {
     clearInterval(countdownTimer);
@@ -922,12 +906,27 @@
       };
     }
 
-    let html = `<section class="hero"><div class="kicker">Época ${YEAR}</div><h1>O pelotão, etapa a etapa</h1>
+    const currentTheme = localStorage.getItem("sobrerodas:team_theme") || "default";
+
+    let html = `<section class="hero">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="kicker">Época ${YEAR}</div>
+        
+        <!-- SELETOR DE TEMAS DAS EQUIPAS -->
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="muted small">🎨 Camisola:</span>
+          <select id="theme-selector" style="font-size:12px;padding:4px 8px;border-radius:8px">
+            ${Object.entries(TEAM_THEMES).map(([k, v]) => `<option value="${k}" ${currentTheme === k ? 'selected' : ''}>${v.name}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+
+      <h1>O pelotão, etapa a etapa</h1>
       <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
       
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
-        <a class="btn" href="#/transferencias" style="background:linear-gradient(135deg,#ff4d4d,#f39c12);color:#fff;box-shadow:0 4px 14px rgba(255,77,77,0.3)">🔥 Transferências</a>
+        <a class="btn" href="#/transferencias" style="background:linear-gradient(135deg,#ff4d4d,#f39c12);color:#fff">🔥 Transferências</a>
         <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
         <a class="btn" href="#/palpites" style="background:#2ecc71;color:#042310">🎮 Liga de Palpites</a>
         <a class="btn ghost" href="#/lendas">Lendas</a>
@@ -1007,6 +1006,13 @@
     app.innerHTML = html;
     setUpdated(meta);
 
+    // Evento para trocar de tema de equipa
+    const tSel = document.getElementById("theme-selector");
+    if (tSel) {
+      tSel.onchange = e => applyTeamTheme(e.target.value);
+    }
+
+    // Ativar o relógio vivo que bate ao segundo
     const targetDate = new Date(`${nextRace.start}T06:00:00Z`).getTime();
     const updateClock = () => {
       const now = Date.now();
@@ -1039,7 +1045,7 @@
       ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA
+  // ------------------------------------------------------------ PÁGINA DA PROVA (COM STARTLIST SEMPRE VISÍVEL)
   async function viewRace(slug, year) {
     clearInterval(countdownTimer);
     year = Number(year);
@@ -1065,8 +1071,12 @@
 
     let html = `${pelotonHtml(raceTop, { title: pelTitle, compact: true })}<div class="race-head"><div class="bigflag">${flag(race.country)}</div><div><div class="muted">${race.edition ? `${race.edition}.ª edição · ` : ""}${fmtRange(race.start, race.end)}</div>
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
-      <select id="race-year" style="margin-left:auto">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>`;
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="btn ghost small" id="btn-save-cal">📅 Guardar na Agenda</button>
+        <select id="race-year">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select>
+      </div></div>`;
 
+    // BLOCO GUIA TV
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -1080,6 +1090,7 @@
       </div>
     </div>`;
 
+    // BLOCO DE METEOROLOGIA
     html += `<div class="weather-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div style="display:flex;align-items:center;gap:12px">
@@ -1121,13 +1132,34 @@
         <div><h2>Subidas e metas</h2><div class="panel">${climbsList(race.analysis || {})}</div>${race.story ? `<div class="section"><h2>Resumo</h2><p>${esc(race.story)}</p></div>` : ""}${videoLink(cleanName(race.name), year)}</div></div>`;
     }
 
-    if (race.startlist && race.startlist.length) html += startlistHtml(race.startlist);
+    // RESTAURO DOS CICLISTAS POR EQUIPA (SEMPRE VISÍVEL)
+    // Se a prova tiver startlist mostra da startlist; se já tiver resultados, agrupa os ciclistas dos resultados por equipa!
+    let displayTeams = race.startlist || [];
+    if (!displayTeams.length && race.results && race.results.length) {
+      const mapTeams = new Map();
+      race.results.forEach(r => {
+        const tKey = r.team || "outros";
+        if (!mapTeams.has(tKey)) {
+          mapTeams.set(tKey, { team: r.team, name: r.team_name || r.team || "Equipa", riders: [] });
+        }
+        mapTeams.get(tKey).riders.push({ rider: r.rider, name: r.name, nation: r.nation, bib: r.rank });
+      });
+      displayTeams = Array.from(mapTeams.values());
+    }
+
+    if (displayTeams.length) {
+      html += startlistHtml(displayTeams);
+    }
+
     html += historyHtml(hist, race.stage_race);
     app.innerHTML = html;
     
     const rYear = document.getElementById("race-year");
     if (rYear) rYear.onchange = e => { location.hash = `#/prova/${slug}/${e.target.value}`; };
     
+    const calBtn = document.getElementById("btn-save-cal");
+    if (calBtn) calBtn.onclick = () => downloadRaceCalendar(race, slug, year);
+
     wirePredictions(slug, year, cleanName(race.name));
 
     if (race.stage_race) classificationTabs(document.getElementById("final"), { ...(race.final || {}), stage: undefined });
@@ -1164,13 +1196,14 @@
 
   const videoLink = (name, year, stage) => `<p><a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} ${year} ${stage ? `stage ${stage} ` : ""}highlights`)}">▶ Ver resumo em vídeo</a></p>`;
 
+  // O BLOCO DAS EQUIPAS: NOME DA EQUIPA NO TOPO + FOTOS EM CÍRCULOS PEQUENOS + NOME À FRENTE
   function startlistHtml(sl) {
     const n = sl.reduce((s, t) => s + (t.riders || []).length, 0), out = sl.reduce((s, t) => s + (t.riders || []).filter(r => r.status).length, 0);
-    return `<div class="section"><div class="section-head"><h2>Inscritos / Startlist</h2><span class="muted small">${sl.length} equipas · ${n} ciclistas${out ? ` · ${out} desistências` : ""}</span></div>
+    return `<div class="section"><div class="section-head"><h2>Equipas & Ciclistas</h2><span class="muted small">${sl.length} equipas · ${n} ciclistas</span></div>
       <div class="grid" style="margin-top:14px">${sl.map(t => `<div class="card">
         <div class="row" style="border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px"><b>${teamLink(t.team, t.name)}</b></div>
         <div style="display:flex;flex-direction:column;gap:8px">${(t.riders || []).map(r => `
-          <div style="display:flex;align-items:center;gap:8px;font-size:13px;${r.status ? "opacity:.5" : ""}">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;${r.status ? "opacity:.5" : ""}">
             <span class="muted" style="min-width:22px;font-weight:700;font-size:11px">${r.bib ?? ""}</span>
             ${avatar(r.rider, r.name)}
             <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${riderLink(r.rider, r.name, r.nation)}${r.status ? ` <span class="tag">${esc(r.status)}</span>` : ""}</div>
@@ -1241,7 +1274,7 @@
 
   function intermediateBlock(list) { return ""; }
 
-  // ------------------------------------------------------------ PÁGINA DA ETAPA (SWIPE)
+  // ------------------------------------------------------------ PÁGINA DA ETAPA
   async function viewStage(slug, year, id) {
     clearInterval(countdownTimer);
     if (id === "result") return viewRace(slug, year);
@@ -1451,7 +1484,7 @@
 
     <div class="section">
       <div class="section-head">
-        <h2>Plantel Tático</h2>
+        <h2>Plantel da Equipa</h2>
         <span class="muted small">${riders.length} Atletas</span>
       </div>
       <div class="tabs" id="team-filter" style="margin-bottom:14px">
@@ -1530,6 +1563,7 @@
       const m = path.match(re);
       if (!m) continue;
       document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === nav));
+      try { renderMobileNav(nav); } catch(e) {} // Atualizar a barra móvel inferior
       if (app) app.innerHTML = `<div class="loading">A carregar…</div>`;
       try { await fn(...m.slice(1)); } catch (e) { 
         console.error(e); 
