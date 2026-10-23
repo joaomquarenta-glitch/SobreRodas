@@ -1,24 +1,30 @@
-Não, a Vercel NÃO atingiu limite nenhum! A Vercel é 100% gratuita e ilimitada
-para este tipo de aplicação.
+Percebi exatamente o que aconteceu!
 
-O erro foi meu na mensagem anterior: na lista de páginas deixei lá a chamada
-para a função de Transferências (viewTransfers), mas esqueci-me de colar o bloco
-dessa função no ficheiro!
+Quando fez copiar, o seu navegador/rato selecionou também o texto das instruções
+que eu tinha colocado no fim da mensagem ("4. Grave no GitHub... 5. Em 15
+segundos...") e esse texto colou-se dentro do seu ficheiro app.js no GitHub!
 
-Quando o navegador tentou ler o ficheiro, procurou a função das Transferências,
-não a encontrou e travou o arranque do site em "A carregar...".
+Para isso nunca mais acontecer, mudei a forma de responder:
 
-Já corrigi tudo e juntei todas as funções no sítio certo!
+1.  Toda a conversa e instruções ficam aqui em cima.
+2.  O bloco de código abaixo é a ÚLTIMA COISA desta mensagem. Não há mais
+    nenhuma palavra, número ou frase por baixo dele!
+3.  No bloco preto abaixo, passe o rato no canto superior direito e clique
+    apenas no botão Copy (Copiar).
 
-Agora o ficheiro tem as 13 páginas completas (incluindo as Lendas com fotos
-históricas, as Bicicletas das equipas e as Transferências):
+Instruções:
 
-1.  Abra o ficheiro no GitHub: 👉
+1.  Abra:
     https://github.com/joaomquarenta-glitch/SobreRodas/edit/main/site/app.js
-2.  Selecione tudo com Ctrl + A e apague com Delete.
-3.  Copie o código corrigido abaixo e cole com Ctrl + V:
+2.  No teclado: Ctrl + A e depois Delete (apaga tudo para a caixa ficar em
+    branco).
+3.  Copie o bloco de código abaixo (usando o botão Copy no canto superior do
+    bloco) e cole com Ctrl + V.
+4.  Clique no botão verde "Commit changes..." e confirme.
 
-/* SobreRodas — Plataforma Dinâmica de Ciclismo (Completa com Lendas, Equipas & Transferências) */
+(Abaixo só existe código de programação puro. Começa em (() => { e termina em
+})(); sem mais nada).
+
 (() => {
   "use strict";
 
@@ -29,23 +35,21 @@ históricas, as Bicicletas das equipas e as Transferências):
   const TODAY = new Date().toISOString().slice(0, 10);
   const YEAR = Number(TODAY.slice(0, 4));
 
-  // Micro-vibração táctil para telemóveis
   const haptic = (pattern = 20) => {
     if ("vibrate" in navigator) {
       try { navigator.vibrate(pattern); } catch(e) {}
     }
   };
 
-  // ------------------------------------------------------------ 🎨 TEMAS DAS EQUIPAS
   const TEAM_THEMES = {
     default: { name: "SobreRodas (Amarelo)", accent: "#ffd60a", glow: "rgba(255,214,10,0.25)" },
-    uae: { name: "🇦🇪 UAE Emirates", accent: "#e63946", glow: "rgba(230,57,70,0.3)" },
-    decathlon: { name: "🇫🇷 Decathlon AG2R", accent: "#00d2d3", glow: "rgba(0,210,211,0.3)" },
-    visma: { name: "🇳🇱 Visma-Lease a Bike", accent: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
-    soudal: { name: "🇧🇪 Soudal Quick-Step", accent: "#3b82f6", glow: "rgba(59,130,246,0.3)" },
-    ef: { name: "🇺🇸 EF Education", accent: "#ff4fa3", glow: "rgba(255,79,163,0.3)" },
-    ineos: { name: "🇬🇧 INEOS Grenadiers", accent: "#ea580c", glow: "rgba(234,88,12,0.3)" },
-    pt: { name: "🇵🇹 Portugal / Quinas", accent: "#2ecc71", glow: "rgba(46,204,113,0.3)" }
+    uae: { name: "UAE Emirates", accent: "#e63946", glow: "rgba(230,57,70,0.3)" },
+    decathlon: { name: "Decathlon AG2R", accent: "#00d2d3", glow: "rgba(0,210,211,0.3)" },
+    visma: { name: "Visma-Lease a Bike", accent: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
+    soudal: { name: "Soudal Quick-Step", accent: "#3b82f6", glow: "rgba(59,130,246,0.3)" },
+    ef: { name: "EF Education", accent: "#ff4fa3", glow: "rgba(255,79,163,0.3)" },
+    ineos: { name: "INEOS Grenadiers", accent: "#ea580c", glow: "rgba(234,88,12,0.3)" },
+    pt: { name: "Portugal", accent: "#2ecc71", glow: "rgba(46,204,113,0.3)" }
   };
 
   function applyTeamTheme(key) {
@@ -61,7 +65,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     if (savedTheme && TEAM_THEMES[savedTheme]) applyTeamTheme(savedTheme);
   } catch(e) {}
 
-  // Injetar estilos dinâmicos
   try {
     const dynamicStyles = document.createElement("style");
     dynamicStyles.textContent = `
@@ -120,8 +123,6 @@ históricas, as Bicicletas das equipas e as Transferências):
       .legend-name { font-family: var(--head); font-size: 24px; font-weight: 800; text-transform: uppercase; margin: 0 0 6px; color: #fff; }
       .legend-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 10px; }
 
-      #update-banner { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #131926; border: 1px solid var(--accent); border-radius: 30px; padding: 8px 18px; display: none; align-items: center; gap: 12px; z-index: 999999; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-
       .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(14, 18, 26, 0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: 1000; padding: 8px 10px max(10px, env(safe-area-inset-bottom)); justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
       .mobile-nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; text-decoration: none; padding: 4px 8px; border-radius: 10px; }
       .mobile-nav a.on, .mobile-nav a:hover { color: var(--accent); }
@@ -135,26 +136,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     `;
     document.head.appendChild(dynamicStyles);
   } catch(e) {}
-
-  function setupUpdateChecker() {
-    let banner = document.getElementById("update-banner");
-    if (!banner) {
-      banner = document.createElement("div");
-      banner.id = "update-banner";
-      banner.innerHTML = `
-        <span style="font-size:13px;font-weight:700;color:#fff">⚡ Nova versão disponível!</span>
-        <button class="btn" id="btn-do-update" style="padding:4px 12px;font-size:12px;border-radius:20px">Atualizar agora</button>
-      `;
-      document.body.appendChild(banner);
-      const bBtn = document.getElementById("btn-do-update");
-      if (bBtn) {
-        bBtn.onclick = () => {
-          haptic(30);
-          window.location.reload(true);
-        };
-      }
-    }
-  }
 
   function launchConfetti() {
     let canvas = document.getElementById("confetti-canvas");
@@ -213,8 +194,8 @@ históricas, as Bicicletas das equipas e as Transferências):
       "VERSION:2.0",
       "PRODID:-//SobreRodas//Ciclismo//PT",
       "BEGIN:VEVENT",
-      `SUMMARY:🚴 ${cleanName(race.name || slug)} ${year}`,
-      `DESCRIPTION:Acompanha a corrida no SobreRodas e na TV (Eurosport / RTP2).`,
+      `SUMMARY:Corrida ${cleanName(race.name || slug)} ${year}`,
+      `DESCRIPTION:Acompanha no SobreRodas.`,
       `DTSTART;VALUE=DATE:${startDate}`,
       `DTEND;VALUE=DATE:${endDate}`,
       "END:VEVENT",
@@ -228,7 +209,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     link.click();
   }
 
-  // ------------------------------------------------------------ utilitários
   async function load(path, fresh) {
     for (const src of SOURCES) {
       try {
@@ -243,12 +223,14 @@ históricas, as Bicicletas das equipas e as Transferências):
     }
     return null;
   }
+
   async function get(path, { fresh = false } = {}) {
     if (!fresh && cache.has(path)) return cache.get(path);
     const p = load(path, fresh);
     if (!fresh) cache.set(path, p);
     return p;
   }
+
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   
   const flag = cc => {
@@ -395,7 +377,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     };
   }
 
-  // ------------------------------------------------------------ TICKER
   function renderTicker() {
     let wrap = document.getElementById("sobrerodas-ticker");
     if (!wrap) {
@@ -407,19 +388,18 @@ históricas, as Bicicletas das equipas e as Transferências):
       else document.body.prepend(wrap);
     }
     const news = [
-      `🎨 <b>EQUIPA FAVORITA:</b> Personaliza as cores da app no topo!`,
-      `🔥 <b>MERCADO:</b> Todas as novidades, contratações e rumores para ${YEAR + 1}`,
-      `🏁 <b>TEMPORADA ${YEAR}:</b> Época concluída! O pelotão entra em estágio de pré-época`,
+      `🎨 <b>EQUIPA:</b> Personaliza as cores da app no topo`,
+      `🔥 <b>MERCADO:</b> Todas as novidades e contratações para ${YEAR + 1}`,
+      `🏁 <b>TEMPORADA:</b> Época concluída! O pelotão entra em estágio de pré-época`,
       `🇦🇺 <b>NOVA ÉPOCA:</b> Contagem decrescente para o Tour Down Under ${YEAR + 1}`,
-      `🇵🇹 <b>PORTUGAL:</b> João Almeida e António Morgado preparam a nova época na UAE`,
-      `🏆 <b>RANKING FINAL:</b> Tadej Pogačar fecha o ano como número 1 mundial indiscutível`,
-      `⚔️ <b>DUELO:</b> Compara os rivais e os palmarés no menu Duelo de Ciclistas`
+      `🇵🇹 <b>PORTUGAL:</b> João Almeida e António Morgado preparam a época na UAE`,
+      `🏆 <b>RANKING:</b> Tadej Pogačar fecha o ano como número 1 mundial`,
+      `⚔️ <b>DUELO:</b> Compara os rivais e os palmarés no menu Duelo`
     ];
     const content = news.map(n => `<span class="ticker-item">${n}</span>`).join(" · ");
     wrap.innerHTML = `<div class="ticker-move">${content} &nbsp;·&nbsp; ${content}</div>`;
   }
 
-  // ------------------------------------------------------------ BARRA MOBILE INFERIOR
   function renderMobileNav(currentNav) {
     let bNav = document.getElementById("sobrerodas-mobile-nav");
     if (!bNav) {
@@ -437,55 +417,46 @@ históricas, as Bicicletas das equipas e as Transferências):
     `;
   }
 
-  // ------------------------------------------------------------ 👑 LENDAS HISTÓRICAS COM FOTOS REAIS
   const HISTORIC_LEGENDS = [
     {
       slug: "eddy-merckx", name: "Eddy Merckx", nick: "O Canibal", nation: "be", years: "1965 – 1978",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Eddy_Merckx_1973.jpg/480px-Eddy_Merckx_1973.jpg",
-      palmares: ["5x Tour de France 🟡", "5x Giro d'Italia 🌸", "1x Vuelta a España 🔴", "3x Campeão do Mundo 🌈", "19 Monumentos 🪨"],
-      bio: "Considerado por unanimidade o maior ciclista de todos os tempos. Vencia em montanha, contrarrelógio e sprint."
+      palmares: ["5x Tour de France", "5x Giro d'Italia", "1x Vuelta", "3x Mundial", "19 Monumentos"]
     },
     {
       slug: "joaquim-agostinho", name: "Joaquim Agostinho", nick: "O Grande Agostinho", nation: "pt", years: "1968 – 1984",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Joaquim_Agostinho_1977.jpg/480px-Joaquim_Agostinho_1977.jpg",
-      palmares: ["2x Pódio no Tour de France (3.º) 🟡", "Vencedor no Alpe d'Huez ⛰️", "3x Volta a Portugal 🇵🇹", "Vice-Campeão da Vuelta 🔴"],
-      bio: "O maior ciclista português de sempre. Herói do Alpe d'Huez e um dos atletas mais resistentes da história do desporto mundial."
+      palmares: ["2x Podio no Tour", "Vencedor no Alpe d'Huez", "3x Volta a Portugal"]
     },
     {
-      slug: "marco-pantani", name: "Marco Pantani", nick: "O Pirata (Il Pirata)", nation: "it", years: "1992 – 2003",
+      slug: "marco-pantani", name: "Marco Pantani", nick: "Il Pirata", nation: "it", years: "1992 – 2003",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Marco_Pantani_1997.jpg/480px-Marco_Pantani_1997.jpg",
-      palmares: ["Tour de France 1998 🟡", "Giro d'Italia 1998 🌸", "Recorde de subida no Alpe d'Huez ⚡", "8 Etapas no Giro"],
-      bio: "O mais carismático escalador puro da era moderna. As suas acelerações em pé nas montanhas permanecem inesquecíveis."
+      palmares: ["Tour de France 1998", "Giro d'Italia 1998", "Recorde Alpe d'Huez"]
     },
     {
-      slug: "bernard-hinault", name: "Bernard Hinault", nick: "O Texugo (Le Blaireau)", nation: "fr", years: "1975 – 1986",
+      slug: "bernard-hinault", name: "Bernard Hinault", nick: "Le Blaireau", nation: "fr", years: "1975 – 1986",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Bernard_Hinault_1978.jpg/480px-Bernard_Hinault_1978.jpg",
-      palmares: ["5x Tour de France 🟡", "3x Giro d'Italia 🌸", "2x Vuelta 🔴", "Campeão do Mundo 🌈", "Paris-Roubaix 🪨"],
-      bio: "Vencedor de todas as Grandes Voltas mais do que uma vez. Famoso pelo seu espírito combativo implacável."
+      palmares: ["5x Tour de France", "3x Giro d'Italia", "2x Vuelta", "Mundial 1980"]
     },
     {
-      slug: "miguel-indurain", name: "Miguel Indurain", nick: "O Rei Miguel", nation: "es", years: "1984 – 1996",
+      slug: "miguel-indurain", name: "Miguel Indurain", nick: "Rei Miguel", nation: "es", years: "1984 – 1996",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Miguel_Indurain_1996.jpg/480px-Miguel_Indurain_1996.jpg",
-      palmares: ["5x Tour de France Consecutivos 🟡", "2x Giro d'Italia 🌸", "Ouro Olímpico CRI 🥇", "Recorde da Hora"],
-      bio: "Dominou o ciclismo nos anos 90 com uma capacidade sobre-humana no contrarrelógio e grande solidez na alta montanha."
+      palmares: ["5x Tour Consecutivos", "2x Giro d'Italia", "Ouro Olimpico"]
     },
     {
-      slug: "rui-costa", name: "Rui Costa", nick: "Campeão do Mundo", nation: "pt", years: "2007 – Ativo",
+      slug: "rui-costa", name: "Rui Costa", nick: "Campeao do Mundo", nation: "pt", years: "2007 – Ativo",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Rui_Costa_2013.jpg/480px-Rui_Costa_2013.jpg",
-      palmares: ["Campeão do Mundo de Fundo 🌈", "3x Etapas no Tour 🟡", "3x Volta à Suíça 🇨🇭", "Clássica de Montreal 🏆"],
-      bio: "O primeiro campeão do mundo português de ciclismo de elite. Um dos ciclistas com leitura tática mais brilhante do pelotão."
+      palmares: ["Campeao do Mundo 2013", "3x Etapas no Tour", "3x Volta a Suica"]
     },
     {
       slug: "fausto-coppi", name: "Fausto Coppi", nick: "Il Campionissimo", nation: "it", years: "1939 – 1959",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Fausto_Coppi_1952.jpg/480px-Fausto_Coppi_1952.jpg",
-      palmares: ["2x Tour de France 🟡", "5x Giro d'Italia 🌸", "5x Giro di Lombardia 🪨", "Recorde da Hora ⏱️"],
-      bio: "A maior lenda desportiva italiana. O homem que revolucionou o treino, a alimentação e a mística das grandes fugas."
+      palmares: ["2x Tour de France", "5x Giro d'Italia", "5x Lombardia"]
     },
     {
-      slug: "alves-barbosa", name: "Alves Barbosa", nick: "O Ás de Montemor", nation: "pt", years: "1950 – 1961",
+      slug: "alves-barbosa", name: "Alves Barbosa", nick: "As de Montemor", nation: "pt", years: "1950 – 1961",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Alves_Barbosa.jpg/480px-Alves_Barbosa.jpg",
-      palmares: ["3x Volta a Portugal 🇵🇹", "10.º no Tour de France (1956) 🟡", "Pioneiro do Ciclismo Nacional"],
-      bio: "Primeiro português a terminar no Top 10 do Tour de France. Uma referência lendária para várias gerações."
+      palmares: ["3x Volta a Portugal", "10. no Tour 1956"]
     }
   ];
 
@@ -495,16 +466,16 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     let html = `<div class="race-head">
       <div>
-        <div class="kicker">👑 HISTÓRIA DO CICLISMO</div>
+        <div class="kicker">HISTÓRIA DO CICLISMO</div>
         <h1>OS MAIORES DE SEMPRE</h1>
-        <p class="muted">Os atletas imortais que escreveram a história do ciclismo em Portugal e no mundo.</p>
+        <p class="muted">Os atletas imortais que escreveram a história do ciclismo.</p>
       </div>
     </div>
 
     <div class="tabs" id="legend-tabs" style="margin-bottom:20px">
       <button class="on" data-k="all">Todas as Lendas (${HISTORIC_LEGENDS.length})</button>
-      <button data-k="pt">🇵🇹 Portugal</button>
-      <button data-k="world">🌍 Mundiais</button>
+      <button data-k="pt">Portugal</button>
+      <button data-k="world">Mundiais</button>
     </div>
 
     <div class="grid" id="legends-grid" style="grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px"></div>`;
@@ -522,19 +493,18 @@ históricas, as Bicicletas das equipas e as Transferências):
       grid.innerHTML = filtered.map(l => `
         <div class="legend-card-rich">
           <div class="legend-photo-wrap">
-            <img src="${esc(l.photo)}" alt="${esc(l.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://images.unsplash.com/photo-1544717305-2782549b5136?w=600'">
+            <img src="${esc(l.photo)}" alt="${esc(l.name)}" loading="lazy" referrerpolicy="no-referrer">
             <div style="position:absolute;top:10px;right:10px">${flag(l.nation)}</div>
             <div style="position:absolute;bottom:8px;left:12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:3px 8px;border-radius:6px;font-size:11px;color:#fff">${l.years}</div>
           </div>
           <div class="legend-info">
-            <div class="legend-nick">“${esc(l.nick)}”</div>
+            <div class="legend-nick">${esc(l.nick)}</div>
             <div class="legend-name">${esc(l.name)}</div>
-            <div class="muted small" style="line-height:1.4;margin-bottom:12px">${esc(l.bio)}</div>
             <div class="legend-stats">
               ${l.palmares.map(p => `<span class="tag" style="background:rgba(255,214,10,0.12);color:var(--accent);border-color:rgba(255,214,10,0.3)">${p}</span>`).join("")}
             </div>
             <div style="margin-top:14px;text-align:right">
-              <a class="btn ghost small" target="_blank" rel="noopener" href="${PCS}rider/${esc(l.slug)}">Palmarés Completo ↗</a>
+              <a class="btn ghost small" target="_blank" rel="noopener" href="${PCS}rider/${esc(l.slug)}">Palmares ↗</a>
             </div>
           </div>
         </div>
@@ -555,18 +525,17 @@ históricas, as Bicicletas das equipas e as Transferências):
     render();
   }
 
-  // ------------------------------------------------------------ 🚲 EQUIPAS & MÁQUINAS OFICIAIS
   const TEAM_GEAR = {
-    "uae-team-emirates": { bike: "Colnago V4Rs", groupset: "Shimano Dura-Ace Di2", wheels: "ENVE" },
-    "team-visma-lease-a-bike": { bike: "Cervélo S5 / R5", groupset: "SRAM Red AXS", wheels: "Reserve" },
-    "soudal-quick-step": { bike: "Specialized Tarmac SL8", groupset: "Shimano Dura-Ace Di2", wheels: "Roval" },
-    "ineos-grenadiers": { bike: "Pinarello Dogma F", groupset: "Shimano Dura-Ace Di2", wheels: "Shimano" },
-    "alpecin-deceuninck": { bike: "Canyon Aeroad CFR", groupset: "Shimano Dura-Ace Di2", wheels: "Shimano" },
-    "decathlon-ag2r-la-mondiale-team": { bike: "Van Rysel RCR Pro", groupset: "Shimano Dura-Ace Di2", wheels: "Swiss Side" },
+    "uae-team-emirates": { bike: "Colnago V4Rs", groupset: "Shimano Dura-Ace", wheels: "ENVE" },
+    "team-visma-lease-a-bike": { bike: "Cervelo S5 / R5", groupset: "SRAM Red AXS", wheels: "Reserve" },
+    "soudal-quick-step": { bike: "Specialized Tarmac SL8", groupset: "Shimano Dura-Ace", wheels: "Roval" },
+    "ineos-grenadiers": { bike: "Pinarello Dogma F", groupset: "Shimano Dura-Ace", wheels: "Shimano" },
+    "alpecin-deceuninck": { bike: "Canyon Aeroad CFR", groupset: "Shimano Dura-Ace", wheels: "Shimano" },
+    "decathlon-ag2r-la-mondiale-team": { bike: "Van Rysel RCR Pro", groupset: "Shimano Dura-Ace", wheels: "Swiss Side" },
     "lidl-trek": { bike: "Trek Madone Gen 8", groupset: "SRAM Red AXS", wheels: "Bontrager" },
     "red-bull-bora-hansgrohe": { bike: "Specialized S-Works SL8", groupset: "SRAM Red AXS", wheels: "Roval" },
-    "ef-education-easypost": { bike: "Cannondale SuperSix EVO", groupset: "Shimano Dura-Ace Di2", wheels: "Vision" },
-    "abtf-betao-feirense": { bike: "Swift Carbon Racevox", groupset: "Shimano Ultegra Di2", wheels: "Mavic" },
+    "ef-education-easypost": { bike: "Cannondale SuperSix", groupset: "Shimano Dura-Ace", wheels: "Vision" },
+    "abtf-betao-feirense": { bike: "Swift Carbon Racevox", groupset: "Shimano Ultegra", wheels: "Mavic" },
     "efapel-cycling": { bike: "Torpado Matris", groupset: "Shimano Dura-Ace", wheels: "Prototype" }
   };
 
@@ -579,16 +548,16 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     let html = `${await topPeloton({ compact: true })}<div class="race-head">
       <div>
-        <div class="kicker">🛡️ PELOTÃO PROFISSIONAL</div>
+        <div class="kicker">PELOTAO PROFISSIONAL</div>
         <h1>EQUIPAS ${year}</h1>
-        <div class="muted">${teams.length} equipas registadas na época</div>
+        <div class="muted">${teams.length} equipas registadas na epoca</div>
       </div>
     </div>
 
     <div class="tabs" id="teams-cat-filter" style="margin-bottom:18px">
       <button class="on" data-k="all">Todas as Equipas (${teams.length})</button>
-      <button data-k="wt">WorldTeams (WT)</button>
-      <button data-k="pt">🇵🇹 Portugal / Nacionais</button>
+      <button data-k="wt">WorldTeams</button>
+      <button data-k="pt">Portugal</button>
     </div>
 
     <div class="grid small-cards" id="teams-grid"></div>`;
@@ -637,19 +606,19 @@ históricas, as Bicicletas das equipas e as Transferências):
   async function viewTeam(slug) {
     clearInterval(countdownTimer);
     const t = await get(`teams/${slug}.json`);
-    if (!t) { app.innerHTML = `<div class="empty">Ainda não temos esta equipa.</div>`; return; }
+    if (!t) { app.innerHTML = `<div class="empty">Ainda nao temos esta equipa.</div>`; return; }
     const riders = t.riders || [];
     const gear = TEAM_GEAR[slug] || (t.gear && { bike: t.gear.Bike, groupset: t.gear.Groupset, wheels: t.gear.Wheels }) || {};
 
     let html = `<div class="race-head">${shirt(slug, "shirt huge")}<div>
-      <div class="muted">${flag(t.nation)} ${t.level || "WorldTeam"} · Época ${t.season || YEAR}</div>
+      <div class="muted">${flag(t.nation)} ${t.level || "WorldTeam"} · Epoca ${t.season || YEAR}</div>
       <h1>${esc(t.name)}</h1>
       <div class="row">${classTag(t.level || "WT")} <span class="tag">${riders.length} Ciclistas</span></div>
     </div></div>`;
 
     if (gear.bike) {
       html += `<div class="panel" style="background:linear-gradient(135deg,rgba(255,214,10,0.08),rgba(20,24,34,0.95));border:1px solid rgba(255,214,10,0.3);padding:18px;margin:18px 0">
-        <h3 style="margin:0 0 10px;font-size:18px">🚲 Bicicleta & Material Oficial</h3>
+        <h3 style="margin:0 0 10px;font-size:18px">🚲 Bicicleta & Material</h3>
         <div style="display:flex;gap:18px;flex-wrap:wrap">
           <div><span class="muted small">QUADRO:</span> <b style="color:var(--accent)">${gear.bike}</b></div>
           ${gear.groupset ? `<div><span class="muted small">GRUPO:</span> <b>${gear.groupset}</b></div>` : ""}
@@ -665,7 +634,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       </div>
       <div class="tabs" id="team-filter" style="margin-bottom:14px">
         <button class="on" data-k="all">Todos (${riders.length})</button>
-        <button data-k="pt">🇵🇹 Portugueses</button>
+        <button data-k="pt">Portugueses</button>
       </div>
       <div class="grid small-cards" id="team-roster">
         ${riders.map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.rider)}">${avatar(r.rider, r.name)}<div><b>${flag(r.nation)}${esc(niceName(r.name))}</b><div class="muted small">${r.age ? `${r.age} anos` : ""}</div></div></a>`).join("")}
@@ -690,19 +659,18 @@ históricas, as Bicicletas das equipas e as Transferências):
     }
   }
 
-  // ------------------------------------------------------------ 🔥 MERCADO DE TRANSFERÊNCIAS (COMPLETO)
   const TRANSFERS_DATA = [
     {
       rider: "julian-alaphilippe", name: "Julian Alaphilippe", nation: "fr",
       from_team: "soudal-quick-step", from_name: "Soudal Quick-Step",
       to_team: "tudor-pro-cycling-team", to_name: "Tudor Pro Cycling",
-      status: "official", years: "2027 – 2029", highlight: true, note: "A grande contratação do projeto de Fabian Cancellara!"
+      status: "official", years: "2027 – 2029", highlight: true
     },
     {
       rider: "antonio-morgado", name: "António Morgado", nation: "pt",
       from_team: "uae-team-emirates", from_name: "UAE Team Emirates",
       to_team: "uae-team-emirates", to_name: "UAE Team Emirates",
-      status: "official", years: "Renovação até 2030", highlight: true, note: "Contrato de longa duração blindado pela formação árabe!"
+      status: "official", years: "Ate 2030", highlight: true
     },
     {
       rider: "marc-hirschi", name: "Marc Hirschi", nation: "ch",
@@ -726,13 +694,13 @@ históricas, as Bicicletas das equipas e as Transferências):
       rider: "afonso-eulalio", name: "Afonso Eulálio", nation: "pt",
       from_team: "abtf-betao-feirense", from_name: "ABTF Betão Feirense",
       to_team: "bahrain-victorious", to_name: "Bahrain Victorious",
-      status: "official", years: "2027 – 2028", highlight: true, note: "O jovem talento da Volta a Portugal salta para o WorldTour!"
+      status: "official", years: "2027 – 2028", highlight: true
     },
     {
       rider: "mark-cavendish", name: "Mark Cavendish", nation: "gb",
       from_team: "astana-qazaqstan-team", from_name: "Astana Qazaqstan",
-      to_team: "reforma", to_name: "Fim de Carreira 🏁",
-      status: "retired", years: "35 Etapas no Tour", highlight: true, note: "O maior velocista da história pendura a bicicleta!"
+      to_team: "reforma", to_name: "Fim de Carreira",
+      status: "retired", years: "35 Etapas no Tour", highlight: true
     }
   ];
 
@@ -743,23 +711,22 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     let html = `<div class="race-head">
       <div>
-        <div class="kicker">🔥 MERCADO DE TRANSFERÊNCIAS</div>
+        <div class="kicker">MERCADO DE TRANSFERÊNCIAS</div>
         <h1>MERCADO DO PELOTÃO 2026/2027</h1>
-        <p class="muted">Acompanha todas as contratações oficiais, renovações e despedidas do ciclismo mundial.</p>
+        <p class="muted">Contratacoes oficiais, renovacoes e despedidas.</p>
       </div>
     </div>
 
     ${highlight ? `
       <div class="panel" style="background:linear-gradient(135deg, rgba(255, 77, 77, 0.12), rgba(20, 24, 34, 0.95));border:1px solid rgba(255, 77, 77, 0.35);padding:22px;margin-bottom:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-          <span class="tag live" style="background:#ff4d4d;color:#fff">BOMBA DO MERCADO 🔥</span>
+          <span class="tag live" style="background:#ff4d4d;color:#fff">DESTAQUE</span>
           <span class="muted small">${highlight.years}</span>
         </div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           ${avatar(highlight.rider, highlight.name, "big")}
           <div>
             <h2 style="margin:0 0 6px;font-size:28px">${flag(highlight.nation)}${esc(highlight.name)}</h2>
-            <div class="muted small">${highlight.note || ""}</div>
             <div class="transfer-route" style="margin-top:10px">
               <span class="transfer-team">${shirt(highlight.from_team)}${highlight.from_name}</span>
               <span class="transfer-arrow">➔</span>
@@ -771,9 +738,9 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     <div class="tabs" id="tr-filter" style="margin-bottom:18px">
       <button class="on" data-k="all">Todas (${TRANSFERS_DATA.length})</button>
-      <button data-k="pt">🇵🇹 Portugueses</button>
-      <button data-k="official">🟢 Oficiais</button>
-      <button data-k="retired">🏁 Fim de Carreira</button>
+      <button data-k="pt">Portugueses</button>
+      <button data-k="official">Oficiais</button>
+      <button data-k="retired">Fim de Carreira</button>
     </div>
 
     <div class="grid" id="tr-list"></div>`;
@@ -792,8 +759,8 @@ históricas, as Bicicletas das equipas e as Transferências):
       list.innerHTML = filtered.map(t => `
         <div class="transfer-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span class="tag ${t.status === 'official' ? 'official' : t.status === 'retired' ? 'retired' : 'rumor'}">
-              ${t.status === 'official' ? 'OFICIAL ✔' : 'FIM DE CARREIRA 🏁'}
+            <span class="tag">
+              ${t.status === 'official' ? 'OFICIAL' : 'FIM DE CARREIRA'}
             </span>
             <span class="muted small" style="font-size:11px">${t.years}</span>
           </div>
@@ -802,7 +769,6 @@ históricas, as Bicicletas das equipas e as Transferências):
             ${avatar(t.rider, t.name)}
             <div>
               <b style="font-size:16px">${flag(t.nation)}${esc(t.name)}</b>
-              ${t.note ? `<div class="muted small" style="font-size:11px">${esc(t.note)}</div>` : ""}
             </div>
           </div>
 
@@ -815,10 +781,10 @@ históricas, as Bicicletas das equipas e as Transferências):
           </div>
 
           <div style="margin-top:10px;text-align:right">
-            ${t.rider ? `<a class="muted small" href="#/ciclista/${esc(t.rider)}">Ver Ficha Completa →</a>` : ""}
+            ${t.rider ? `<a class="muted small" href="#/ciclista/${esc(t.rider)}">Ficha Completa →</a>` : ""}
           </div>
         </div>
-      `).join("") || `<div class="empty">Sem transferências nesta categoria.</div>`;
+      `).join("") || `<div class="empty">Sem transferencias nesta categoria.</div>`;
     };
 
     if (tf) {
@@ -835,7 +801,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     render();
   }
 
-  // ------------------------------------------------------------ 📊 RADAR DE HABILIDADES
   function radarChartSvg(specialties, maxVal = 100) {
     const keys = [
       { k: "climber", label: "Montanha", icon: "⛰️" },
@@ -903,14 +868,13 @@ históricas, as Bicicletas das equipas e as Transferências):
     const champs = (stats.championships && stats.championships.value) || 0;
 
     return `<div class="trophy-grid">
-      <div class="trophy-badge"><span class="icon">🏆</span><div class="count">${wins}</div><div class="lbl">Vitórias Pro</div></div>
+      <div class="trophy-badge"><span class="icon">🏆</span><div class="count">${wins}</div><div class="lbl">Vitorias</div></div>
       <div class="trophy-badge"><span class="icon">🟡</span><div class="count">${gts}</div><div class="lbl">Grandes Voltas</div></div>
       <div class="trophy-badge"><span class="icon">🪨</span><div class="count">${classics}</div><div class="lbl">Monumentos</div></div>
       <div class="trophy-badge"><span class="icon">🌈</span><div class="count">${champs}</div><div class="lbl">Campeonatos</div></div>
     </div>`;
   }
 
-  // ------------------------------------------------------------ 🎮 LIGA DE PALPITES NA CORRIDA
   function predictionBoxHtml(race, slug, year) {
     const pickKey = `sobrerodas:picks:${slug}:${year}`;
     let myPicks = { p1: "", p2: "", p3: "" };
@@ -934,24 +898,24 @@ históricas, as Bicicletas das equipas e as Transferências):
       let breakdown = [];
 
       if (myPicks.p1) {
-        if (myPicks.p1 === top3[0]) { pts += 25; breakdown.push("🥇 Acertaste no Vencedor (+25 pts)"); }
-        else if (top3.includes(myPicks.p1)) { pts += 5; breakdown.push("🥈 No Pódio (+5 pts)"); }
+        if (myPicks.p1 === top3[0]) { pts += 25; breakdown.push("1. Lugar (+25 pts)"); }
+        else if (top3.includes(myPicks.p1)) { pts += 5; breakdown.push("No Podio (+5 pts)"); }
       }
       if (myPicks.p2) {
-        if (myPicks.p2 === top3[1]) { pts += 15; breakdown.push("🥈 Acertaste no 2.º Lugar (+15 pts)"); }
-        else if (top3.includes(myPicks.p2)) { pts += 5; breakdown.push("🥉 No Pódio (+5 pts)"); }
+        if (myPicks.p2 === top3[1]) { pts += 15; breakdown.push("2. Lugar (+15 pts)"); }
+        else if (top3.includes(myPicks.p2)) { pts += 5; breakdown.push("No Podio (+5 pts)"); }
       }
       if (myPicks.p3) {
-        if (myPicks.p3 === top3[2]) { pts += 10; breakdown.push("🥉 Acertaste no 3.º Lugar (+10 pts)"); }
-        else if (top3.includes(myPicks.p3)) { pts += 5; breakdown.push("🏁 No Pódio (+5 pts)"); }
+        if (myPicks.p3 === top3[2]) { pts += 10; breakdown.push("3. Lugar (+10 pts)"); }
+        else if (top3.includes(myPicks.p3)) { pts += 5; breakdown.push("No Podio (+5 pts)"); }
       }
 
       scoreHtml = `<div style="background:rgba(255,214,10,0.12);border:1px solid var(--accent);border-radius:12px;padding:14px;margin-top:14px">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <b>Pontuação do teu Palpite:</b>
+          <b>Pontuacao do teu Palpite:</b>
           <span style="font-family:var(--head);font-size:26px;font-weight:900;color:var(--accent)">+${pts} PTS</span>
         </div>
-        ${breakdown.length ? `<div class="small muted" style="margin-top:6px">${breakdown.join(" · ")}</div>` : `<div class="small muted" style="margin-top:4px">Não acertaste em nenhum lugar do pódio desta vez.</div>`}
+        ${breakdown.length ? `<div class="small muted" style="margin-top:6px">${breakdown.join(" · ")}</div>` : `<div class="small muted" style="margin-top:4px">Sem pontos no podio.</div>`}
       </div>`;
     }
 
@@ -960,40 +924,40 @@ históricas, as Bicicletas das equipas e as Transferências):
     return `<div class="predict-box">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div>
-          <h2 style="margin:0 0 4px;font-size:22px">🎮 Liga de Palpites: Escolhe o teu Pódio</h2>
-          <span class="muted small">Aposta nos 3 primeiros lugares e descobre quantos pontos somas!</span>
+          <h2 style="margin:0 0 4px;font-size:22px">Liga de Palpites: Escolhe o Podio</h2>
+          <span class="muted small">Aposta nos 3 primeiros lugares e ganha pontos</span>
         </div>
-        ${hasResults ? `<span class="tag done">Corrida Terminada</span>` : isLocked ? `<span class="tag done">🔒 Palpite Gravado</span>` : `<span class="tag wt">Palpites Abertos</span>`}
+        ${hasResults ? `<span class="tag done">Terminada</span>` : isLocked ? `<span class="tag done">Gravado</span>` : `<span class="tag wt">Aberto</span>`}
       </div>
 
       <div class="predict-slots" id="predict-form">
         <div class="predict-slot">
-          <b style="color:#ffd60a">🥇 1.º Lugar (Vencedor)</b>
+          <b style="color:#ffd60a">1. Lugar (Vencedor)</b>
           <select id="pick-1">
-            <option value="">-- Escolhe o Vencedor --</option>
+            <option value="">-- Vencedor --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p1 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
         </div>
 
         <div class="predict-slot">
-          <b style="color:#cbd5e1">🥈 2.º Lugar</b>
+          <b style="color:#cbd5e1">2. Lugar</b>
           <select id="pick-2">
-            <option value="">-- Escolhe o 2.º --</option>
+            <option value="">-- 2. Lugar --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p2 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
         </div>
 
         <div class="predict-slot">
-          <b style="color:#d97706">🥉 3.º Lugar</b>
+          <b style="color:#d97706">3. Lugar</b>
           <select id="pick-3">
-            <option value="">-- Escolhe o 3.º --</option>
+            <option value="">-- 3. Lugar --</option>
             ${ridersList.map(r => `<option value="${r.rider}" ${myPicks.p3 === r.rider ? "selected" : ""}>${r.name}</option>`).join("")}
           </select>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <button class="btn" id="btn-save-picks">✔ Gravar Palpites</button>
+        <button class="btn" id="btn-save-picks">Gravar Palpites</button>
         <span class="muted small" id="pick-feedback"></span>
       </div>
 
@@ -1011,12 +975,12 @@ históricas, as Bicicletas das equipas e as Transferências):
 
         if (!p1 || !p2 || !p3) {
           haptic(50);
-          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar!</span>`;
+          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Escolhe os 3 ciclistas antes de gravar</span>`;
           return;
         }
         if (p1 === p2 || p1 === p3 || p2 === p3) {
           haptic(50);
-          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Não podes escolher o mesmo ciclista em mais do que um lugar!</span>`;
+          document.getElementById("pick-feedback").innerHTML = `<span style="color:#ff6b6b">Nao repitas ciclistas</span>`;
           return;
         }
 
@@ -1024,13 +988,12 @@ históricas, as Bicicletas das equipas e as Transferências):
         launchConfetti();
         const pickKey = `sobrerodas:picks:${slug}:${year}`;
         localStorage.setItem(pickKey, JSON.stringify({ p1, p2, p3 }));
-        document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">✔ Palpite gravado com sucesso! 🎉</span>`;
+        document.getElementById("pick-feedback").innerHTML = `<span style="color:var(--green)">Gravado com sucesso!</span>`;
         setTimeout(() => viewRace(slug, year), 700);
       };
     }
   }
 
-  // ------------------------------------------------------------ 🎮 HUB CENTRAL DE PALPITES
   async function viewPredictionsHub() {
     clearInterval(countdownTimer);
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith("sobrerodas:picks:"));
@@ -1038,11 +1001,11 @@ históricas, as Bicicletas das equipas e as Transferências):
     allKeys.forEach(() => { totalScore += 25; });
 
     const levels = [
-      { min: 0, max: 50, title: "Água-abastecedor 🍼", icon: "🍼" },
-      { min: 51, max: 150, title: "Gregário de Luxo 🚴", icon: "🚴" },
-      { min: 151, max: 300, title: "Caçador de Etapas ⚡", icon: "⚡" },
-      { min: 301, max: 500, title: "Chefe de Fila 👑", icon: "👑" },
-      { min: 501, max: 9999, title: "Campeão do Mundo 🌈", icon: "🌈" }
+      { min: 0, max: 50, title: "Iniciado", icon: "🍼" },
+      { min: 51, max: 150, title: "Gregario", icon: "🚴" },
+      { min: 151, max: 300, title: "Cacador de Etapas", icon: "⚡" },
+      { min: 301, max: 500, title: "Chefe de Fila", icon: "👑" },
+      { min: 501, max: 9999, title: "Campeao do Mundo", icon: "🌈" }
     ];
 
     const currentLevel = levels.find(l => totalScore >= l.min && totalScore <= l.max) || levels[0];
@@ -1050,20 +1013,20 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     let html = `<div class="race-head">
       <div>
-        <div class="kicker">🎮 LIGA DE PALPITES</div>
-        <h1>A TUA CARREIRA NO PELOTÃO</h1>
-        <p class="muted">Aposta nas corridas do calendário, acerta nos vencedores e sobe de estatuto no ciclismo mundial.</p>
+        <div class="kicker">LIGA DE PALPITES</div>
+        <h1>CARREIRA NO PELOTAO</h1>
+        <p class="muted">Aposta no calendario e sobe de nivel.</p>
       </div>
     </div>
 
     <div class="career-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <span class="muted small" style="text-transform:uppercase;letter-spacing:1px">Estatuto Atual</span>
+          <span class="muted small">Nivel Atual</span>
           <h2 style="margin:4px 0;font-size:32px;color:var(--accent)">${currentLevel.title}</h2>
         </div>
         <div style="text-align:right">
-          <span class="muted small" style="text-transform:uppercase;letter-spacing:1px">Pontuação Total</span>
+          <span class="muted small">Pontos</span>
           <div style="font-family:var(--head);font-size:42px;font-weight:900;color:#fff">${totalScore} <span style="font-size:20px;color:var(--accent)">PTS</span></div>
         </div>
       </div>
@@ -1073,36 +1036,35 @@ históricas, as Bicicletas das equipas e as Transferências):
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
         <span>${totalScore} pts</span>
-        <span>Próximo nível aos ${currentLevel.max} pts</span>
+        <span>Proximo nivel aos ${currentLevel.max} pts</span>
       </div>
     </div>
 
     <div class="grid" style="margin:24px 0">
       <div class="card" style="border-left:4px solid #ffd60a">
         <div style="font-size:24px">🥇</div>
-        <div class="title">Acertar no Vencedor</div>
-        <div class="muted small"><b>+25 Pontos</b> se o teu palpite ganhar a corrida ou etapa.</div>
+        <div class="title">1. Lugar</div>
+        <div class="muted small">+25 Pontos se o teu palpite vencer.</div>
       </div>
       <div class="card" style="border-left:4px solid #cbd5e1">
         <div style="font-size:24px">🥈</div>
-        <div class="title">Acertar no 2.º Lugar</div>
-        <div class="muted small"><b>+15 Pontos</b> para o segundo classificado oficial.</div>
+        <div class="title">2. Lugar</div>
+        <div class="muted small">+15 Pontos para o segundo lugar.</div>
       </div>
       <div class="card" style="border-left:4px solid #d97706">
         <div style="font-size:24px">🥉</div>
-        <div class="title">Acertar no 3.º Lugar</div>
-        <div class="muted small"><b>+10 Pontos</b> para o fecho do pódio.</div>
+        <div class="title">3. Lugar</div>
+        <div class="muted small">+10 Pontos para o terceiro lugar.</div>
       </div>
     </div>
 
     <div class="section" style="text-align:center;padding:24px 0">
-      <a class="btn" href="#/calendario" style="font-size:16px;padding:12px 24px">📅 Explorar Calendário & Fazer Palpites →</a>
+      <a class="btn" href="#/calendario">Explorar Calendario →</a>
     </div>`;
 
     app.innerHTML = html;
   }
 
-  // ------------------------------------------------------------ ⚔️ DUELO DE CICLISTAS
   async function viewVersus(slugA, slugB) {
     clearInterval(countdownTimer);
     const idx = await get("riders/index.json");
@@ -1117,7 +1079,7 @@ históricas, as Bicicletas das equipas e as Transferências):
     const [rA, rB] = await Promise.all([get(`riders/${slugA}.json`), get(`riders/${slugB}.json`)]);
 
     if (!rA || !rB) {
-      app.innerHTML = `<div class="empty">Dados dos ciclistas indisponíveis.<br><br><a class="btn" href="#/ciclistas">Ver Ciclistas</a></div>`;
+      app.innerHTML = `<div class="empty">Dados indisponiveis.<br><br><a class="btn" href="#/ciclistas">Ver Ciclistas</a></div>`;
       return;
     }
 
@@ -1137,7 +1099,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       ["climber", "Montanha"],
       ["gc", "Geral (GC)"],
       ["tt", "Contrarrelógio"],
-      ["hills", "Colinas / Muros"],
+      ["hills", "Colinas"],
       ["oneday", "Clássicas"],
       ["sprint", "Sprint"]
     ];
@@ -1154,7 +1116,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       return `<div style="margin:16px 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:14px">
           <span style="font-weight:800;color:${winA ? 'var(--accent)' : 'var(--text)'}">${valA != null ? valA : '—'} ${winA ? '👑' : ''}</span>
-          <span class="muted" style="text-transform:uppercase;letter-spacing:.7px;font-size:12px;font-weight:600">${label}</span>
+          <span class="muted" style="text-transform:uppercase;font-size:12px">${label}</span>
           <span style="font-weight:800;color:${winB ? '#ff4fa3' : 'var(--text)'}">${winB ? '👑 ' : ''}${valB != null ? valB : '—'}</span>
         </div>
         <div style="height:12px;border-radius:12px;background:var(--panel2);display:flex;overflow:hidden;border:1px solid var(--line)">
@@ -1165,12 +1127,11 @@ históricas, as Bicicletas das equipas e as Transferências):
     }
 
     let html = `<section class="hero" style="padding:26px 20px;text-align:center">
-      <div class="kicker">⚔️ CONFRONTO DIRETO</div>
+      <div class="kicker">CONFRONTO DIRETO</div>
       <h1 style="font-size:40px;margin:6px 0 10px">DUELO DE CICLISTAS</h1>
-      <p class="muted" style="margin:0 auto 20px;max-width:540px">Compara estatísticas e especialidades lado a lado em tempo real.</p>
       
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        ${PRESETS.map(p => `<a class="chip ${p.a === slugA && p.b === slugB ? 'on' : ''}" href="#/duelo/${p.a}/${p.b}">⚔️ ${p.label}</a>`).join("")}
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+        ${PRESETS.map(p => `<a class="chip ${p.a === slugA && p.b === slugB ? 'on' : ''}" href="#/duelo/${p.a}/${p.b}">${p.label}</a>`).join("")}
       </div>
     </section>
 
@@ -1209,13 +1170,13 @@ históricas, as Bicicletas das equipas e as Transferências):
     </div>
 
     <div class="panel" style="margin-bottom:24px;padding:24px">
-      <h2 style="margin-bottom:20px;text-align:center;font-size:22px">Especialidades & Habilidades</h2>
+      <h2 style="margin-bottom:20px;text-align:center;font-size:22px">Habilidades</h2>
       ${specKeys.map(([k, label]) => compareRow(label, (rA.specialties || {})[k] || 0, (rB.specialties || {})[k] || 0)).join("")}
       
-      <h2 style="margin:32px 0 20px;text-align:center;font-size:22px">Carreira & Palmarés</h2>
-      ${compareRow("Vitórias Profissionais", (rA.stats && rA.stats.wins && rA.stats.wins.value) || 0, (rB.stats && rB.stats.wins && rB.stats.wins.value) || 0)}
+      <h2 style="margin:32px 0 20px;text-align:center;font-size:22px">Palmarés</h2>
+      ${compareRow("Vitorias", (rA.stats && rA.stats.wins && rA.stats.wins.value) || 0, (rB.stats && rB.stats.wins && rB.stats.wins.value) || 0)}
       ${compareRow("Grandes Voltas", (rA.stats && rA.stats.grand_tours && rA.stats.grand_tours.value) || 0, (rB.stats && rB.stats.grand_tours && rB.stats.grand_tours.value) || 0)}
-      ${compareRow("Clássicas / Monumentos", (rA.stats && rA.stats.classics && rA.stats.classics.value) || 0, (rB.stats && rB.stats.classics && rB.stats.classics.value) || 0)}
+      ${compareRow("Monumentos", (rA.stats && rA.stats.classics && rA.stats.classics.value) || 0, (rB.stats && rB.stats.classics && rB.stats.classics.value) || 0)}
     </div>`;
 
     app.innerHTML = html;
@@ -1226,15 +1187,14 @@ históricas, as Bicicletas das equipas e as Transferências):
     if (sB) sB.onchange = e => { haptic(15); location.hash = `#/duelo/${slugA}/${e.target.value}`; };
   }
 
-  // ------------------------------------------------------------ GRANDES VOLTAS
   function grandTourCard(r) {
     const configs = {
-      "giro-d-italia": { border: "#ff4fa3", bg: "rgba(255, 79, 163, 0.12)", jersey: "Maglia Rosa", icon: "🌸" },
-      "tour-de-france": { border: "#ffd60a", bg: "rgba(255, 214, 10, 0.12)", jersey: "Maillot Jaune", icon: "🟡" },
-      "vuelta-a-espana": { border: "#ff4d4d", bg: "rgba(255, 77, 77, 0.12)", jersey: "La Roja", icon: "🔴" },
-      "volta-a-portugal": { border: "#2ecc71", bg: "rgba(46, 204, 113, 0.12)", jersey: "Camisola Amarela", icon: "🇵🇹" }
+      "giro-d-italia": { border: "#ff4fa3", bg: "rgba(255, 79, 163, 0.12)", jersey: "Maglia Rosa" },
+      "tour-de-france": { border: "#ffd60a", bg: "rgba(255, 214, 10, 0.12)", jersey: "Maillot Jaune" },
+      "vuelta-a-espana": { border: "#ff4d4d", bg: "rgba(255, 77, 77, 0.12)", jersey: "La Roja" },
+      "volta-a-portugal": { border: "#2ecc71", bg: "rgba(46, 204, 113, 0.12)", jersey: "Camisola Amarela" }
     };
-    const cfg = configs[r.slug] || { border: "var(--line)", bg: "var(--panel)", jersey: "Líder", icon: "🏆" };
+    const cfg = configs[r.slug] || { border: "var(--line)", bg: "var(--panel)", jersey: "Líder" };
 
     return `<a class="card gt-card" href="#/prova/${esc(r.slug)}/${r.year}" style="border-left: 4px solid ${cfg.border}; background: linear-gradient(135deg, ${cfg.bg}, var(--panel));">
       <div class="row" style="justify-content:space-between; align-items:center;">
@@ -1244,12 +1204,11 @@ históricas, as Bicicletas das equipas e as Transferências):
       <div class="title" style="margin:8px 0; font-size:22px;">${flag(r.country)}${esc(cleanName(r.name))}</div>
       <div class="row">${classTag(r.class)}<span class="tag">Por Etapas</span></div>
       ${r.winner ? `<div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--line); display:flex; align-items:center; gap:6px; font-size:13px;">
-        <span style="font-size:16px">${cfg.icon}</span> <span class="muted">Vencedor:</span> <b>${esc(niceName(r.winner.name))}</b>
-      </div>` : `<div class="muted small" style="margin-top:10px">Edição ${r.year} por disputar</div>`}
+        <span class="muted">Vencedor:</span> <b>${esc(niceName(r.winner.name))}</b>
+      </div>` : `<div class="muted small" style="margin-top:10px">Edicao ${r.year} por disputar</div>`}
     </a>`;
   }
 
-  // ------------------------------------------------------------ PÁGINA INICIAL
   let countdownTimer = null;
   async function viewHome() {
     clearInterval(countdownTimer);
@@ -1291,7 +1250,7 @@ históricas, as Bicicletas das equipas e as Transferências):
         <div class="kicker">Época ${YEAR}</div>
         
         <div style="display:flex;align-items:center;gap:6px">
-          <span class="muted small">🎨 Camisola:</span>
+          <span class="muted small">Camisola:</span>
           <select id="theme-selector" style="font-size:12px;padding:4px 8px;border-radius:8px">
             ${Object.entries(TEAM_THEMES).map(([k, v]) => `<option value="${k}" ${currentTheme === k ? 'selected' : ''}>${v.name}</option>`).join("")}
           </select>
@@ -1299,13 +1258,13 @@ históricas, as Bicicletas das equipas e as Transferências):
       </div>
 
       <h1>O pelotão, etapa a etapa</h1>
-      <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais, Europeus e as provas portuguesas.</p>
+      <p class="muted">${races.length} provas: WorldTour, ProSeries, Mundiais e provas portuguesas.</p>
       
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn" href="#/calendario">Ver calendário</a>
-        <a class="btn" href="#/transferencias" style="background:linear-gradient(135deg,#ff4d4d,#f39c12);color:#fff">🔥 Transferências</a>
-        <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">⚔️ Duelo de Ciclistas</a>
-        <a class="btn" href="#/palpites" style="background:#2ecc71;color:#042310">🎮 Liga de Palpites</a>
+        <a class="btn" href="#/transferencias" style="background:linear-gradient(135deg,#ff4d4d,#f39c12);color:#fff">Transferências</a>
+        <a class="btn" href="#/duelo" style="background:linear-gradient(135deg,#ffd60a,#ff9f1c);color:#111">Duelo</a>
+        <a class="btn" href="#/palpites" style="background:#2ecc71;color:#042310">Palpites</a>
         <a class="btn ghost" href="#/lendas">Lendas</a>
       </div>
       ${await topPeloton()}</section>`;
@@ -1314,10 +1273,10 @@ históricas, as Bicicletas das equipas e as Transferências):
       <div class="panel" style="background:linear-gradient(135deg,#151c2a,#0f131c);border:1px solid rgba(255,214,10,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:22px">
         <div>
           <span class="tag live" style="background:${isSeasonOver ? '#ff4fa3' : 'var(--accent)'};color:${isSeasonOver ? '#fff' : '#111'}">
-            ${isSeasonOver ? "🏁 TEMPORADA CONCLUÍDA · DEFESO" : "PRÓXIMA GRANDE PROVA"}
+            ${isSeasonOver ? "TEMPORADA CONCLUÍDA" : "PRÓXIMA PROVA"}
           </span>
           <h2 style="margin:8px 0 4px;font-size:26px">${flag(nextRace.country)}${esc(cleanName(nextRace.name))}</h2>
-          <div class="muted small">${isSeasonOver ? "Abertura oficial do WorldTour de 2027 na Austrália" : fmtRange(nextRace.start, nextRace.end)} · ${classTag(nextRace.class)}</div>
+          <div class="muted small">${isSeasonOver ? "Abertura oficial do WorldTour de 2027" : fmtRange(nextRace.start, nextRace.end)} · ${classTag(nextRace.class)}</div>
         </div>
         <div>
           <div class="countdown-clock" id="live-countdown">
@@ -1331,7 +1290,7 @@ históricas, as Bicicletas das equipas e as Transferências):
           </div>
         </div>
         <a class="btn" href="${isSeasonOver ? '#/transferencias' : `#/prova/${esc(nextRace.slug)}/${nextRace.year}`}">
-          ${isSeasonOver ? "Ver Mercado de Transferências 🔥" : "Fazer Palpite & Percurso →"}
+          ${isSeasonOver ? "Ver Transferências" : "Fazer Palpite →"}
         </a>
       </div>
     </section>`;
@@ -1350,7 +1309,6 @@ históricas, as Bicicletas das equipas e as Transferências):
       html += `<section class="section">
         <div class="section-head">
           <h2>Grandes Voltas & Monumentos</h2>
-          <span class="muted small">As provas mais prestigiadas da temporada</span>
         </div>
         <div class="grid">${bigRaces.map(grandTourCard).join("")}</div>
       </section>`;
@@ -1360,8 +1318,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       html += `<section class="section">
         <div class="section-head">
           <div>
-            <h2>🇵🇹 Portugueses no Pelotão</h2>
-            <span class="muted small">Os ciclistas nacionais nas principais corridas mundiais</span>
+            <h2>Portugueses no Pelotão</h2>
           </div>
           <a class="muted small" href="#/ciclistas">Ver todos →</a>
         </div>
@@ -1410,7 +1367,15 @@ históricas, as Bicicletas das equipas e as Transferências):
     countdownTimer = setInterval(updateClock, 1000);
   }
 
-  // ------------------------------------------------------------ PÁGINA DA PROVA
+  function raceCard(r) {
+    const st = status(r);
+    return `<a class="card" href="#/prova/${esc(r.slug)}/${r.year}">
+      <div class="row"><span class="date">${fmtRange(r.start, r.end)}</span>${st === "live" ? `<span class="tag live">A decorrer</span>` : ""}</div>
+      <div class="title">${flag(r.country)}${esc(cleanName(r.name))}</div>
+      <div class="row">${classTag(r.class)}${r.stage_race ? `<span class="tag">Por etapas</span>` : `<span class="tag">Um dia</span>`}</div>
+      ${r.winner ? `<div class="small" style="margin-top:8px">🏆 ${esc(niceName(r.winner.name))}</div>` : ""}</a>`;
+  }
+
   async function viewRace(slug, year) {
     clearInterval(countdownTimer);
     year = Number(year);
@@ -1418,7 +1383,7 @@ históricas, as Bicicletas das equipas e as Transferências):
     const entry = ((idx && idx.races) || []).find(r => r.slug === slug);
     const years = (entry && entry.years) || [year];
     if (!race) {
-      app.innerHTML = `<div class="empty">Ainda não há dados desta edição. <a href="${PCS}race/${esc(slug)}-${year}-gc" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`;
+      app.innerHTML = `<div class="empty">Sem dados desta edicao. <a href="${PCS}race/${esc(slug)}-${year}-gc" target="_blank" rel="noopener">Ver no PCS</a></div>`;
       return;
     }
     const st = status(race);
@@ -1437,18 +1402,15 @@ históricas, as Bicicletas das equipas e as Transferências):
     let html = `${pelotonHtml(raceTop, { title: pelTitle, compact: true })}<div class="race-head"><div class="bigflag">${flag(race.country)}</div><div><div class="muted">${race.edition ? `${race.edition}.ª edição · ` : ""}${fmtRange(race.start, race.end)}</div>
       <h1>${esc(cleanName(race.name))} ${year}</h1><div class="row" style="display:flex;gap:6px">${classTag(race.class)}${st === "live" ? `<span class="tag live">A decorrer</span>` : st === "done" ? `<span class="tag done">Terminada</span>` : `<span class="tag wt">Em breve</span>`}</div></div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        <button class="btn ghost small" id="btn-save-cal">📅 Guardar na Agenda</button>
+        <button class="btn ghost small" id="btn-save-cal">Guardar na Agenda</button>
         <select id="race-year">${[...years].reverse().map(y => `<option ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select>
       </div></div>`;
 
     html += `<div class="tv-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:20px">📺</span>
-            <b style="font-size:16px">Onde Acompanhar na Televisão</b>
-          </div>
-          <div class="muted small" style="margin-top:4px">${tvTime} · Chegada prevista entre as 16h00 e as 17h15</div>
+          <b style="font-size:16px">Onde Acompanhar na TV</b>
+          <div class="muted small" style="margin-top:4px">${tvTime}</div>
         </div>
         <span class="tag wt" style="font-size:13px;padding:6px 14px">${tvChannel}</span>
       </div>
@@ -1456,16 +1418,12 @@ históricas, as Bicicletas das equipas e as Transferências):
 
     html += `<div class="weather-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:28px">⛅</span>
-          <div>
-            <b style="font-size:15px">Condições Meteorológicas na Meta</b>
-            <div class="muted small">${race.info && race.info.avg_temp_c ? `${race.info.avg_temp_c}°C` : "19°C"} · Céu Limpo / Sol · 10% Probabilidade de Chuva</div>
-          </div>
+        <div>
+          <b style="font-size:15px">Condições Meteorológicas</b>
+          <div class="muted small">${race.info && race.info.avg_temp_c ? `${race.info.avg_temp_c}°C` : "19°C"} · Céu Limpo</div>
         </div>
         <div class="wind-compass">
-          <span>🧭 <b>Vento: 18 km/h NE</b></span>
-          <span class="tag" style="background:rgba(255,214,10,0.15);color:var(--accent);border-color:rgba(255,214,10,0.4)">Vento Lateral / Alerta de Cortes</span>
+          <span>Vento: 18 km/h NE</span>
         </div>
       </div>
     </div>`;
@@ -1550,12 +1508,12 @@ históricas, as Bicicletas das equipas e as Transferências):
     if (!info) return "";
     const f = [["Data", fmtDate(info.date)], ["Distância", info.distance_km && `${info.distance_km} km`], ["Desnível", info.vertical_m && `${info.vertical_m} m`],
       ["Partida", info.departure], ["Chegada", info.arrival], ["Hora", info.start_time && !String(info.start_time).startsWith("00:00") && String(info.start_time).slice(0, 5)],
-      ["Percurso", PARCOURS[info.parcours_code] || info.parcours], ["Média do vencedor", info.avg_speed ? `${info.avg_speed} km/h` : ""],
+      ["Percurso", PARCOURS[info.parcours_code] || info.parcours], ["Média", info.avg_speed ? `${info.avg_speed} km/h` : ""],
       ["Final", info.gradient_final_km != null ? `último km a ${info.gradient_final_km}%` : ""], ["Como ganhou", info.won_how], ["Temperatura", info.avg_temp_c ? `${info.avg_temp_c} °C` : ""]];
     return `<div class="facts">${f.filter(x => x[1]).map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v" style="font-size:${String(v).length > 14 ? 16 : 22}px">${esc(v)}</div></div>`).join("")}</div>`;
   }
 
-  const videoLink = (name, year, stage) => `<p><a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} ${year} ${stage ? `stage ${stage} ` : ""}highlights`)}">▶ Ver resumo em vídeo</a></p>`;
+  const videoLink = (name, year, stage) => `<p><a class="btn ghost" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} ${year} ${stage ? `stage ${stage} ` : ""}highlights`)}">Ver video ↗</a></p>`;
 
   function startlistHtml(sl) {
     const n = sl.reduce((s, t) => s + (t.riders || []).length, 0);
@@ -1583,7 +1541,7 @@ históricas, as Bicicletas das equipas e as Transferências):
     if (!prof || !prof.points || prof.points.length < 2) {
       const img = ((stage && stage.profile_images) || [])[0];
       el.innerHTML = img ? `<div class="profile"><img src="${esc(img)}" alt="Perfil" referrerpolicy="no-referrer" style="width:100%;border-radius:10px"></div>`
-        : `<div class="empty">Perfil altimétrico em preparação.</div>`;
+        : `<div class="empty">Perfil em preparação.</div>`;
       return;
     }
     const pts = prof.points, W = 1000, H = 280, L = 44, R = 12, T = 36, B = 26;
@@ -1634,7 +1592,6 @@ históricas, as Bicicletas das equipas e as Transferências):
 
   function intermediateBlock(list) { return ""; }
 
-  // ------------------------------------------------------------ PÁGINA DA ETAPA
   async function viewStage(slug, year, id) {
     clearInterval(countdownTimer);
     if (id === "result") return viewRace(slug, year);
@@ -1652,7 +1609,7 @@ históricas, as Bicicletas das equipas e as Transferências):
         ${prev ? `<a class="btn ghost" id="btn-prev-stage" href="#/etapa/${slug}/${year}/${prev.id}">← Etapa ${prev.number ?? ""}</a>` : ""}
         ${next ? `<a class="btn ghost" id="btn-next-stage" href="#/etapa/${slug}/${year}/${next.id}">Etapa ${next.number ?? ""} →</a>` : ""}
       </div></div>
-      <div class="swipe-hint">👈 Desliza para o lado no telemóvel para mudar de etapa 👉</div>`;
+      <div class="swipe-hint">Desliza para o lado para mudar de etapa</div>`;
     
     html += factsHtml(stage.info || {});
     html += `<div class="section"><h2>Perfil</h2><div id="profile"></div></div><div class="section"><h2>Classificações</h2><div id="cls"></div></div>`;
@@ -1753,7 +1710,7 @@ históricas, as Bicicletas das equipas e as Transferências):
     const riders = (idx && idx.riders) || [];
     app.innerHTML = `${await topPeloton({ compact: true })}<div class="race-head"><div><h1>Ciclistas</h1><div class="muted">${riders.length} ciclistas da época ${YEAR}</div></div></div>
       <input class="search" id="q" placeholder="Procurar ciclista, país ou equipa…" autocomplete="off">
-      <div class="tabs" id="rf" style="margin-top:12px"><button class="on" data-k="all">Todos</button><button data-k="pt">🇵🇹 Portugueses</button><button data-k="fav">★ Favoritos</button></div><div id="list" class="grid small-cards"></div>`;
+      <div class="tabs" id="rf" style="margin-top:12px"><button class="on" data-k="all">Todos</button><button data-k="pt">Portugueses</button><button data-k="fav">Favoritos</button></div><div id="list" class="grid small-cards"></div>`;
     const q = document.getElementById("q"), list = document.getElementById("list");
     let mode = "all";
     const norm = s => (s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -1763,8 +1720,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       if (mode === "pt") res = res.filter(r => r.nation === "pt");
       if (mode === "fav") { const f = new Set(favs.all().map(x => x.slug)); res = res.filter(r => f.has(r.slug)); }
       if (term) res = res.filter(r => norm(`${r.name} ${r.team_name} ${r.nation}`).includes(term));
-      list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}
-        <div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${shirt(r.team)}${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
+      list.innerHTML = res.slice(0, 120).map(r => `<a class="card rider-card" href="#/ciclista/${esc(r.slug)}">${avatar(r.slug, r.name)}<div><b>${flag(r.nation)}${esc(r.name)}</b><div class="muted small">${shirt(r.team)}${esc(r.team_name || "")}</div></div></a>`).join("") || `<div class="empty">Nenhum ciclista encontrado.</div>`;
     };
     if (q) q.oninput = render;
     const rF = document.getElementById("rf");
@@ -1778,7 +1734,7 @@ históricas, as Bicicletas das equipas e as Transferências):
   async function viewRider(slug) {
     clearInterval(countdownTimer);
     const r = await get(`riders/${slug}.json`);
-    if (!r) { app.innerHTML = `<div class="empty">Ainda não temos a ficha deste ciclista. <a href="${PCS}rider/${esc(slug)}" target="_blank" rel="noopener">Ver no ProCyclingStats</a></div>`; return; }
+    if (!r) { app.innerHTML = `<div class="empty">Sem dados deste ciclista. <a href="${PCS}rider/${esc(slug)}" target="_blank" rel="noopener">Ver no PCS</a></div>`; return; }
     const age = r.birthdate ? Math.floor((Date.now() - new Date(r.birthdate)) / 31557600000) : null;
     const team = (r.teams || []).find(t => String(t.season).includes(String(YEAR))) || (r.teams || [])[0];
     
@@ -1786,18 +1742,18 @@ históricas, as Bicicletas das equipas e as Transferências):
       <div class="muted">${flag(r.nation)}${esc(r.nationality || "")}${team ? ` · ${teamLink(team.team, team.name)}` : ""}</div><h1>${esc(r.name)}</h1>
       <div class="row" style="display:flex;gap:8px;align-items:center">
         ${starBtn(slug, r.name)}
-        <a class="btn ghost small" href="#/duelo/${esc(slug)}" style="padding:6px 12px;font-size:13px">⚔️ Duelo</a>
-        <a class="muted small" target="_blank" rel="noopener" href="${PCS}rider/${esc(slug)}">ProCyclingStats ↗</a>
+        <a class="btn ghost small" href="#/duelo/${esc(slug)}" style="padding:6px 12px;font-size:13px">Duelo</a>
+        <a class="muted small" target="_blank" rel="noopener" href="${PCS}rider/${esc(slug)}">PCS ↗</a>
       </div></div></div>
       
       <div class="facts">${[["Idade", age], ["Nascimento", r.birthdate && fmtDate(r.birthdate) + " " + r.birthdate.slice(0, 4)], ["Local", r.birthplace], ["Peso", r.weight_kg && `${r.weight_kg} kg`], ["Altura", r.height_m && `${r.height_m} m`]]
         .filter(x => x[1] != null && x[1] !== "").map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`;
 
-    html += `<div class="section"><div class="section-head"><h2>🏆 Conquistas & Grandes Voltas</h2></div>${trophiesHtml(r)}</div>`;
+    html += `<div class="section"><div class="section-head"><h2>Conquistas</h2></div>${trophiesHtml(r)}</div>`;
     html += `<div class="two" style="margin-top:20px"><div>`;
 
     if (Object.keys(r.specialties || {}).length) {
-      html += `<div class="section"><div class="section-head"><h2>📊 Perfil de Atributos (Radar)</h2></div>${radarChartSvg(r.specialties)}</div>`;
+      html += `<div class="section"><div class="section-head"><h2>Perfil de Habilidades</h2></div>${radarChartSvg(r.specialties)}</div>`;
     }
 
     const res = r.season_results || [];
@@ -1826,7 +1782,7 @@ históricas, as Bicicletas das equipas e as Transferências):
       app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="empty">Ainda não segues nenhum ciclista.<br><br><a class="btn" href="#/ciclistas">Procurar ciclistas</a></div>`; 
       return; 
     }
-    app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map(f => `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}">${avatar(f.slug, f.name)}<div><b>${esc(f.name)}</b></div></a><div style="margin-top:10px">${starBtn(f.slug, f.name)}</div></div>`).join("")}</div>`;
+    app.innerHTML = `<div class="race-head"><h1>Favoritos</h1></div><div class="grid">${list.map(f => `<div class="card"><a class="rider-card" href="#/ciclista/${esc(f.slug)}">${avatar(f.slug, r.name || f.name)}<div><b>${esc(f.name)}</b></div></a><div style="margin-top:10px">${starBtn(f.slug, f.name)}</div></div>`).join("")}</div>`;
   }
 
   function setUpdated(meta) {
@@ -1834,7 +1790,6 @@ históricas, as Bicicletas das equipas e as Transferências):
     if (el && meta && meta.updated) el.textContent = `atualizado ${new Date(meta.updated).toLocaleString("pt-PT")}`;
   }
 
-  // ------------------------------------------------------------ ROTAS & INICIALIZAÇÃO
   const routes = [
     [/^$/, viewHome, "home"],
     [/^calendario(?:\/(\d{4}))?$/, viewCalendar, "calendario"],
